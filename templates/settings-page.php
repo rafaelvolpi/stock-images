@@ -22,7 +22,10 @@ $max_size = get_option('stock_images_max_size', 'medium'); // Default to medium 
 ?>
 
 <div class="wrap">
-    <h1><?php _e('Stock Images Settings', 'stock-images'); ?></h1>
+    <h1 class="wp-heading-inline"><?php _e('Stock Images Settings', 'stock-images'); ?></h1>
+    <a href="<?php echo admin_url('upload.php?page=stock-images'); ?>" class="page-title-action">
+        <?php _e('Back to Stock Images', 'stock-images'); ?>
+    </a>
     
     <div class="stock-settings-form">
         <h2><?php _e('API Configuration', 'stock-images'); ?></h2>
@@ -219,121 +222,4 @@ $max_size = get_option('stock_images_max_size', 'medium'); // Default to medium 
             </ul>
         </div>
     </div>
-</div>
-
-<style>
-.stock-api-instructions {
-    margin-top: 40px;
-    background: #fff;
-    border: 1px solid #ddd;
-    border-radius: 8px;
-    padding: 20px;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-}
-
-.stock-api-instructions h3 {
-    margin-top: 0;
-    color: #23282d;
-}
-
-.stock-api-section {
-    margin-bottom: 30px;
-    padding: 20px;
-    background: #f9f9f9;
-    border-radius: 4px;
-    border-left: 4px solid #0073aa;
-}
-
-.stock-api-section h4 {
-    margin-top: 0;
-    color: #0073aa;
-    font-size: 16px;
-    font-weight: 600;
-}
-
-.stock-api-instructions ol {
-    margin-left: 20px;
-}
-
-.stock-api-instructions li {
-    margin-bottom: 10px;
-    line-height: 1.6;
-}
-
-.stock-api-instructions ul {
-    margin-left: 20px;
-    margin-top: 10px;
-}
-
-.stock-rate-limits {
-    margin-top: 30px;
-    padding: 20px;
-    background: #f9f9f9;
-    border-left: 4px solid #0073aa;
-    border-radius: 4px;
-}
-
-.stock-rate-limits h4 {
-    margin-top: 0;
-    color: #0073aa;
-}
-
-.stock-rate-limit-section {
-    margin-bottom: 20px;
-    padding: 15px;
-    background: #fff;
-    border-radius: 4px;
-    border: 1px solid #ddd;
-}
-
-.stock-rate-limit-section h5 {
-    margin-top: 0;
-    color: #23282d;
-    font-size: 14px;
-    font-weight: 600;
-}
-
-.stock-rate-limit-section ul {
-    margin-left: 20px;
-    margin-top: 10px;
-}
-
-.stock-usage-guidelines {
-    margin-top: 40px;
-    background: #fff;
-    border: 1px solid #ddd;
-    border-radius: 8px;
-    padding: 20px;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-}
-
-.stock-usage-guidelines h3 {
-    margin-top: 0;
-    color: #23282d;
-}
-
-.stock-guideline {
-    margin-bottom: 25px;
-}
-
-.stock-guideline h4 {
-    color: #0073aa;
-    margin-bottom: 10px;
-}
-
-.stock-guideline p {
-    line-height: 1.6;
-    margin: 0;
-}
-
-.stock-api-instructions a,
-.stock-usage-guidelines a {
-    color: #0073aa;
-    text-decoration: none;
-}
-
-.stock-api-instructions a:hover,
-.stock-usage-guidelines a:hover {
-    text-decoration: underline;
-}
-</style> 
+</div> 

@@ -1,0 +1,13 @@
+{
+  "name": "stock-images-plugin",
+  "version": "1.0.0",
+  "description": "WordPress Stock Images Plugin SCSS Build",
+  "scripts": {
+    "scss:dev": "sass --style=expanded --no-source-map assets/scss/stock-images.scss assets/css/stock-images.css",
+    "scss:watch": "sass --watch assets/scss/stock-images.scss:assets/css/stock-images.css --style=expanded",
+    "scss:build": "sass --style=compressed assets/scss/stock-images.scss assets/css/stock-images.css"
+  },
+  "devDependencies": {
+    "sass": "^1.69.0"
+  }
+} 

@@ -46,7 +46,7 @@ A WordPress plugin that integrates stock photos directly into your WordPress Med
 
 ### Plugin Settings
 
-1. Go to **Stock Images** > **Settings** in your WordPress admin
+1. Go to **Settings > Stock Images** in your WordPress admin
 2. Enter your Unsplash API Access Key
 3. Optionally enter your Secret Key (not required for basic usage)
 4. Click "Save Settings"
@@ -55,7 +55,7 @@ A WordPress plugin that integrates stock photos directly into your WordPress Med
 
 ### Searching and Importing Images
 
-1. Go to **Stock Images** in your WordPress admin
+1. Go to **Media > Stock Images** in your WordPress admin
 2. Enter a search term in the search box
 3. Browse through the results
 4. Click "Import" on any image you want to add to your media library

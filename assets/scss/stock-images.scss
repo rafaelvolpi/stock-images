@@ -1,0 +1,698 @@
+// Variables
+$color-bg: #fff;
+$color-border: #ddd;
+$color-shadow: rgba(0, 0, 0, 0.1);
+$color-primary: #0073aa;
+$color-primary-dark: #005a87;
+$color-muted: #666;
+$color-light: #f0f0f0;
+$radius: 8px;
+$transition: 0.3s ease;
+
+.stock-images-tab-content {
+    padding: 20px;
+}
+
+// Universal card styles
+.stock-image-card {
+  background: $color-bg;
+  border: 1px solid $color-border;
+  border-radius: $radius;
+  overflow: hidden;
+  transition: all $transition;
+  box-shadow: 0 2px 4px $color-shadow;
+  height: auto;
+  display: flex;
+  flex-direction: column;
+
+  &:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px $color-shadow;
+  }
+
+  .stock-image-wrapper {
+    position: relative;
+    width: 100%;
+    background-color: $color-light;
+    aspect-ratio: 4/3;
+    height: 0;
+    padding-bottom: 75%;
+    overflow: hidden;
+  }
+
+  .stock-image {
+    position: absolute;
+    top: 0; left: 0;
+    width: 100%; height: 100%;
+    object-fit: contain;
+    transition: transform $transition;
+  }
+
+  &:hover .stock-image {
+    transform: scale(1.05);
+  }
+
+  .stock-image-overlay {
+    position: absolute;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background: rgba(0, 0, 0, 0.7);
+    display: flex;
+    align-items: flex-end;
+    justify-content: center;
+    opacity: 0;
+    transition: opacity $transition;
+    padding-bottom: 10px;
+  }
+  &:hover .stock-image-overlay {
+    opacity: 1;
+  }
+
+  .stock-download-buttons {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 10px 10px 10px;
+    width: 100%;
+    box-sizing: border-box;
+  }
+
+  .stock-image-info {
+    padding: 15px;
+    background: $color-bg;
+    border-top: 1px solid #eee;
+    flex: 1 1 auto;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-end;
+  }
+
+  .stock-photographer {
+    margin: 0 0 8px 0;
+    font-size: 13px;
+    color: $color-muted;
+    line-height: 1.4;
+    a {
+      color: $color-primary;
+      text-decoration: none;
+      &:hover { text-decoration: underline; }
+    }
+  }
+
+  .stock-description {
+    margin: 0;
+    font-size: 12px;
+    color: #999;
+    line-height: 1.4;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+}
+
+// Grid/container styles (for admin, modal, etc)
+.stock-results, .stock-modal-results, #stock-modal-results, .stock-images-tab-content .stock-modal-results {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(270px, 1fr));
+  gap: 20px;
+  margin-top: 20px;
+}
+
+@media (max-width: 1024px) {
+  .stock-results, .stock-modal-results, #stock-modal-results, .stock-images-tab-content .stock-modal-results {
+    grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  }
+}
+@media (max-width: 768px) {
+  .stock-results, .stock-modal-results, #stock-modal-results, .stock-images-tab-content .stock-modal-results {
+    grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+    gap: 10px;
+  }
+}
+@media (max-width: 480px) {
+  .stock-results, .stock-modal-results, #stock-modal-results, .stock-images-tab-content .stock-modal-results {
+    grid-template-columns: 1fr;
+  }
+  .stock-image-card {
+    max-width: 340px;
+    margin: 0 auto;
+  }
+}
+
+// --- Search Bar & Form ---
+.stock-search-container {
+  background: $color-bg;
+  border: 1px solid $color-border;
+  border-radius: $radius;
+  margin: 20px 0;
+  padding: 20px;
+  box-shadow: 0 1px 3px $color-shadow;
+}
+
+.stock-search-header {
+  margin-bottom: 20px;
+  h3 {
+    margin: 0 0 15px 0;
+    color: #23282d;
+    font-size: 18px;
+    font-weight: 600;
+  }
+}
+
+.stock-search-form-wrapper {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+}
+
+.stock-search-input {
+  flex: 1;
+  padding: 8px 12px;
+  border: 1px solid $color-border;
+  border-radius: 4px;
+  font-size: 14px;
+  line-height: 1.4;
+  min-height: 36px;
+  &:focus {
+    border-color: $color-primary;
+    box-shadow: 0 0 0 1px $color-primary;
+    outline: none;
+  }
+}
+
+.stock-search-btn {
+  min-height: 36px;
+  padding: 8px 16px;
+  background: $color-primary;
+  border: 1px solid $color-primary;
+  color: #fff;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 14px;
+  line-height: 1.4;
+  text-decoration: none;
+  white-space: nowrap;
+  transition: all 0.2s ease;
+  &:hover {
+    background: $color-primary-dark;
+    border-color: $color-primary-dark;
+    color: #fff;
+  }
+}
+
+.stock-load-more-container, .stock-modal-load-more {
+  text-align: center;
+  margin-top: 30px;
+  padding-top: 20px;
+  border-top: 1px solid #eee;
+}
+
+// --- Utility Classes ---
+.stock-loading {
+  text-align: center;
+  padding: 40px 20px;
+  color: $color-muted;
+  font-style: italic;
+  &::before {
+    content: '';
+    display: inline-block;
+    width: 20px;
+    height: 20px;
+    border: 2px solid #f3f3f3;
+    border-top: 2px solid $color-primary;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+    margin-right: 10px;
+    vertical-align: middle;
+  }
+}
+
+.no-results {
+  text-align: center;
+  padding: 40px 20px;
+  color: $color-muted;
+  font-style: italic;
+  grid-column: 1 / -1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 200px;
+  background: $color-light;
+  border-radius: $radius;
+  border: 2px dashed $color-border;
+  
+  p {
+    margin: 0;
+    font-size: 16px;
+    max-width: 400px;
+  }
+}
+
+// --- Stats ---
+.stock-stats {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 20px;
+  margin-bottom: 30px;
+}
+
+.stock-stat-card {
+  background: $color-bg;
+  border: 1px solid $color-border;
+  border-radius: $radius;
+  padding: 20px;
+  text-align: center;
+  box-shadow: 0 2px 4px $color-shadow;
+}
+
+.stock-stat-number {
+  font-size: 32px;
+  font-weight: bold;
+  color: $color-primary;
+  margin-bottom: 8px;
+}
+
+.stock-stat-label {
+  color: $color-muted;
+  font-size: 14px;
+}
+
+// --- Settings Page ---
+.stock-settings-form {
+  max-width: 600px;
+  background: $color-bg;
+  border: 1px solid $color-border;
+  border-radius: $radius;
+  padding: 30px;
+  box-shadow: 0 2px 4px $color-shadow;
+  h2 {
+    margin-top: 0;
+    color: #23282d;
+  }
+}
+
+.form-table th {
+  width: 200px;
+  padding: 20px 10px 20px 0;
+}
+
+.form-table td {
+  padding: 15px 10px;
+}
+
+.stock-api-key-input {
+  width: 100%;
+  max-width: 400px;
+  padding: 8px 12px;
+  border: 1px solid $color-border;
+  border-radius: 4px;
+  font-size: 14px;
+}
+
+.stock-help-text {
+  color: $color-muted;
+  font-size: 13px;
+  margin-top: 5px;
+}
+
+// --- Notices ---
+.notice {
+  margin: 15px 0;
+}
+
+.notice-dismiss {
+  float: right;
+  padding: 0;
+  margin: 0;
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  color: #72777c;
+  &:hover {
+    color: #dc3232;
+  }
+}
+
+// --- Admin Page Utility ---
+.wrap.stock-images {
+  max-width: 1200px;
+}
+
+// --- Keyframes ---
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+// --- Download/Import Button Styles ---
+.stock-import-circle {
+  position: relative;
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  background: $color-primary;
+  border: 1px solid $color-primary;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  color: #fff;
+  transition: background 0.2s, border-color 0.2s, transform 0.2s;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.15);
+  cursor: pointer;
+
+  &:hover {
+    background: $color-primary-dark;
+    border-color: $color-primary-dark;
+    color: #fff;
+    transform: scale(1.05);
+  }
+  &:disabled {
+    background: #ccc;
+    border-color: #ccc;
+    color: #fff;
+    cursor: not-allowed;
+    transform: none;
+  }
+
+  .stock-size-label {
+    font-size: 18px;
+    font-weight: bold;
+    line-height: 1;
+    z-index: 2;
+  }
+
+  svg {
+    position: absolute;
+    bottom: -8px;
+    right: -8px;
+    width: 16px;
+    height: 16px;
+    background: #fff;
+    color: $color-primary;
+    border: 2px solid $color-primary;
+    border-radius: 50%;
+    padding: 2px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+    z-index: 3;
+    transition: background 0.2s, color 0.2s, border-color 0.2s;
+  }
+  &:hover svg {
+    background: $color-primary-dark;
+    color: #fff;
+    border-color: $color-primary-dark;
+  }
+}
+
+// --- Modal Search Bar Consistency ---
+.stock-modal-search-container {
+  @extend .stock-search-container;
+  margin: 0 0 20px 0;
+  padding: 20px;
+}
+
+.stock-modal-search {
+  @extend .stock-search-form-wrapper;
+  background: none;
+  border: none;
+  box-shadow: none;
+  margin-bottom: 0;
+  padding: 0;
+  .stock-search-input {
+    @extend .stock-search-input;
+  }
+  .button {
+    @extend .stock-search-btn;
+  }
+}
+
+// --- Admin Page Sections ---
+.stock-recent-imports {
+  margin-top: 40px;
+  background: $color-bg;
+  border: 1px solid $color-border;
+  border-radius: $radius;
+  padding: 20px;
+  box-shadow: 0 2px 4px $color-shadow;
+
+  h3 {
+    margin-top: 0;
+    color: #23282d;
+  }
+}
+
+.stock-help {
+  margin-top: 40px;
+  background: $color-bg;
+  border: 1px solid $color-border;
+  border-radius: $radius;
+  padding: 20px;
+  box-shadow: 0 2px 4px $color-shadow;
+
+  h3 {
+    margin-top: 0;
+    color: #23282d;
+  }
+}
+
+.stock-help-content {
+  ol {
+    margin-left: 20px;
+  }
+
+  li {
+    margin-bottom: 10px;
+    line-height: 1.6;
+  }
+}
+
+.stock-usage-tips {
+  margin-top: 30px;
+  padding: 20px;
+  background: #f0f8ff;
+  border-left: 4px solid #28a745;
+  border-radius: 4px;
+
+  h4 {
+    margin-top: 0;
+    color: #28a745;
+  }
+
+  ul {
+    margin-left: 20px;
+  }
+
+  li {
+    margin-bottom: 10px;
+    line-height: 1.6;
+  }
+}
+
+.stock-attribution-notice {
+  margin-top: 30px;
+  padding: 20px;
+  background: #f9f9f9;
+  border-left: 4px solid $color-primary;
+  border-radius: 4px;
+
+  h4 {
+    margin-top: 0;
+    color: $color-primary;
+  }
+
+  p {
+    margin-bottom: 10px;
+    line-height: 1.6;
+  }
+
+  a {
+    color: $color-primary;
+    text-decoration: none;
+
+    &:hover {
+      text-decoration: underline;
+    }
+  }
+}
+
+// --- Recent Imports Grid ---
+.stock-recent-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 15px;
+  margin-top: 15px;
+}
+
+.stock-recent-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px;
+  background: #f9f9f9;
+  border-radius: 4px;
+}
+
+.stock-recent-thumb {
+  width: 50px;
+  height: 50px;
+  object-fit: cover;
+  border-radius: 4px;
+}
+
+.stock-recent-info {
+  flex: 1;
+}
+
+.stock-recent-title {
+  margin: 0 0 5px 0;
+  font-weight: 600;
+  font-size: 13px;
+  line-height: 1.3;
+}
+
+.stock-recent-source {
+  margin: 0 0 3px 0;
+  font-size: 11px;
+  color: $color-primary;
+  font-weight: 600;
+}
+
+.stock-recent-photographer {
+  margin: 0 0 3px 0;
+  font-size: 11px;
+  color: $color-muted;
+
+  a {
+    color: $color-primary;
+    text-decoration: none;
+
+    &:hover {
+      text-decoration: underline;
+    }
+  }
+}
+
+.stock-recent-date {
+  margin: 0;
+  font-size: 11px;
+  color: #999;
+}
+
+// --- Settings Page Additional Styles ---
+.stock-api-instructions {
+  margin-top: 40px;
+  background: $color-bg;
+  border: 1px solid $color-border;
+  border-radius: $radius;
+  padding: 20px;
+  box-shadow: 0 2px 4px $color-shadow;
+
+  h3 {
+    margin-top: 0;
+    color: #23282d;
+  }
+}
+
+.stock-api-section {
+  margin-bottom: 30px;
+  padding: 20px;
+  background: #f9f9f9;
+  border-radius: 4px;
+  border-left: 4px solid $color-primary;
+
+  h4 {
+    margin-top: 0;
+    color: $color-primary;
+    font-size: 16px;
+    font-weight: 600;
+  }
+}
+
+.stock-api-instructions {
+  ol {
+    margin-left: 20px;
+  }
+
+  li {
+    margin-bottom: 10px;
+    line-height: 1.6;
+  }
+
+  ul {
+    margin-left: 20px;
+    margin-top: 10px;
+  }
+}
+
+.stock-rate-limits {
+  margin-top: 30px;
+  padding: 20px;
+  background: #f9f9f9;
+  border-left: 4px solid $color-primary;
+  border-radius: 4px;
+
+  h4 {
+    margin-top: 0;
+    color: $color-primary;
+  }
+}
+
+.stock-rate-limit-section {
+  margin-bottom: 20px;
+  padding: 15px;
+  background: $color-bg;
+  border-radius: 4px;
+  border: 1px solid $color-border;
+
+  h5 {
+    margin-top: 0;
+    color: #23282d;
+    font-size: 14px;
+    font-weight: 600;
+  }
+
+  ul {
+    margin-left: 20px;
+    margin-top: 10px;
+  }
+}
+
+.stock-usage-guidelines {
+  margin-top: 40px;
+  background: $color-bg;
+  border: 1px solid $color-border;
+  border-radius: $radius;
+  padding: 20px;
+  box-shadow: 0 2px 4px $color-shadow;
+
+  h3 {
+    margin-top: 0;
+    color: #23282d;
+  }
+}
+
+.stock-guideline {
+  margin-bottom: 25px;
+
+  h4 {
+    color: $color-primary;
+    margin-bottom: 10px;
+  }
+
+  p {
+    line-height: 1.6;
+    margin: 0;
+  }
+}
+
+.stock-api-instructions,
+.stock-usage-guidelines {
+  a {
+    color: $color-primary;
+    text-decoration: none;
+
+    &:hover {
+      text-decoration: underline;
+    }
+  }
+} 

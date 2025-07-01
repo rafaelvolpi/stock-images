@@ -170,20 +170,21 @@ class StockImages {
     }
     
     public function add_admin_menu() {
-        add_menu_page(
+        // Add Stock Images as a submenu under Media
+        add_submenu_page(
+            'upload.php', // Parent: Media
             __('Stock Images', 'stock-images'),
             __('Stock Images', 'stock-images'),
             'upload_files',
             'stock-images',
-            array($this, 'admin_page'),
-            'dashicons-format-image',
-            11
+            array($this, 'admin_page')
         );
         
+        // Add Settings as a submenu under Settings
         add_submenu_page(
-            'stock-images',
-            __('Settings', 'stock-images'),
-            __('Settings', 'stock-images'),
+            'options-general.php', // Parent: Settings
+            __('Stock Images Settings', 'stock-images'),
+            __('Stock Images', 'stock-images'),
             'manage_options',
             'stock-images-settings',
             array($this, 'settings_page')
@@ -644,61 +645,6 @@ class StockImages {
             echo '</div>';
         }
         echo '</div>';
-        
-        echo '<style>
-        .stock-recent-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
-            gap: 15px;
-            margin-top: 15px;
-        }
-        .stock-recent-item {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            padding: 10px;
-            background: #f9f9f9;
-            border-radius: 4px;
-        }
-        .stock-recent-thumb {
-            width: 50px;
-            height: 50px;
-            object-fit: cover;
-            border-radius: 4px;
-        }
-        .stock-recent-info {
-            flex: 1;
-        }
-        .stock-recent-title {
-            margin: 0 0 5px 0;
-            font-weight: 600;
-            font-size: 13px;
-            line-height: 1.3;
-        }
-        .stock-recent-source {
-            margin: 0 0 3px 0;
-            font-size: 11px;
-            color: #0073aa;
-            font-weight: 600;
-        }
-        .stock-recent-photographer {
-            margin: 0 0 3px 0;
-            font-size: 11px;
-            color: #666;
-        }
-        .stock-recent-photographer a {
-            color: #0073aa;
-            text-decoration: none;
-        }
-        .stock-recent-photographer a:hover {
-            text-decoration: underline;
-        }
-        .stock-recent-date {
-            margin: 0;
-            font-size: 11px;
-            color: #999;
-        }
-        </style>';
     }
     
     public function ajax_get_stats() {

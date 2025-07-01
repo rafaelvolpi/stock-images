@@ -13,13 +13,16 @@ $access_key = get_option('unsplash_access_key');
 ?>
 
 <div class="wrap stock-images">
-    <h1><?php _e('Stock Images', 'stock-images'); ?></h1>
+    <h1 class="wp-heading-inline"><?php _e('Stock Images', 'stock-images'); ?></h1>
+    <a href="<?php echo admin_url('options-general.php?page=stock-images-settings'); ?>" class="page-title-action">
+        <?php _e('Settings', 'stock-images'); ?>
+    </a>
     
     <?php if (empty($access_key) && empty(get_option('pexels_api_key'))): ?>
         <div class="notice notice-warning">
             <p>
                 <?php _e('Please configure your Unsplash or Pexels API key in the', 'stock-images'); ?>
-                <a href="<?php echo admin_url('admin.php?page=stock-images-settings'); ?>">
+                <a href="<?php echo admin_url('options-general.php?page=stock-images-settings'); ?>">
                     <?php _e('settings page', 'stock-images'); ?>
                 </a>
                 <?php _e('to start using this plugin.', 'stock-images'); ?>
@@ -72,11 +75,11 @@ $access_key = get_option('unsplash_access_key');
         <div id="stock-results" class="stock-results">
             <?php if (empty($access_key)): ?>
                 <div class="no-results">
-                    <p><?php _e('Please configure your Unsplash API key to start searching.', 'stock-images'); ?></p>
+                    <p><?php _e('Please configure your API key to start searching.', 'stock-images'); ?></p>
                 </div>
             <?php else: ?>
                 <div class="no-results">
-                    <p><?php _e('Enter a search term above to find images from Unsplash.', 'stock-images'); ?></p>
+                    <p><?php _e('Enter a search term above to find images.', 'stock-images'); ?></p>
                 </div>
             <?php endif; ?>
         </div>
@@ -99,11 +102,22 @@ $access_key = get_option('unsplash_access_key');
         <h3><?php _e('How to Use', 'stock-images'); ?></h3>
         <div class="stock-help-content">
             <ol>
-                <li><?php _e('Enter a search term in the search box above.', 'stock-images'); ?></li>
-                <li><?php _e('Browse through the results and click "Import" on any image you want to add to your media library.', 'stock-images'); ?></li>
-                <li><?php _e('The image will be downloaded and added to your WordPress media library with proper attribution.', 'stock-images'); ?></li>
-                <li><?php _e('You can then use the image in your posts and pages like any other media file.', 'stock-images'); ?></li>
+                <li><?php _e('Choose your preferred image source (Unsplash or Pexels) from the dropdown menu.', 'stock-images'); ?></li>
+                <li><?php _e('Enter a search term in the search box above (e.g., "nature", "business", "food").', 'stock-images'); ?></li>
+                <li><?php _e('Browse through the results and click the size button (S, M, L) on any image you want to import.', 'stock-images'); ?></li>
+                <li><?php _e('The image will be downloaded and added to your WordPress Media Library with proper attribution.', 'stock-images'); ?></li>
+                <li><?php _e('Use the imported image in your posts, pages, or anywhere else in WordPress like any other media file.', 'stock-images'); ?></li>
             </ol>
+            
+            <div class="stock-usage-tips">
+                <h4><?php _e('Pro Tips', 'stock-images'); ?></h4>
+                <ul>
+                    <li><?php _e('Use specific search terms for better results (e.g., "mountain sunset" instead of just "mountain").', 'stock-images'); ?></li>
+                    <li><?php _e('Choose the appropriate image size: Small (350px) for thumbnails, Medium (700px) for content, Large (1920px) for featured images.', 'stock-images'); ?></li>
+                    <li><?php _e('You can also access stock images directly from the Media Library by clicking "Add Media" in any post or page.', 'stock-images'); ?></li>
+                    <li><?php _e('All imported images include automatic attribution to comply with licensing requirements.', 'stock-images'); ?></li>
+                </ul>
+            </div>
             
             <div class="stock-attribution-notice">
                 <h4><?php _e('Important: Attribution Requirements', 'stock-images'); ?></h4>
@@ -113,74 +127,10 @@ $access_key = get_option('unsplash_access_key');
                 <p>
                     <?php _e('For more information about usage requirements, visit:', 'stock-images'); ?>
                     <a href="https://unsplash.com/license" target="_blank">https://unsplash.com/license</a>
+                    <?php _e('and', 'stock-images'); ?>
+                    <a href="https://www.pexels.com/license/" target="_blank">https://www.pexels.com/license/</a>
                 </p>
             </div>
         </div>
     </div>
-</div>
-
-<style>
-.stock-recent-imports {
-    margin-top: 40px;
-    background: #fff;
-    border: 1px solid #ddd;
-    border-radius: 8px;
-    padding: 20px;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-}
-
-.stock-recent-imports h3 {
-    margin-top: 0;
-    color: #23282d;
-}
-
-.stock-help {
-    margin-top: 40px;
-    background: #fff;
-    border: 1px solid #ddd;
-    border-radius: 8px;
-    padding: 20px;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-}
-
-.stock-help h3 {
-    margin-top: 0;
-    color: #23282d;
-}
-
-.stock-help-content ol {
-    margin-left: 20px;
-}
-
-.stock-help-content li {
-    margin-bottom: 10px;
-    line-height: 1.6;
-}
-
-.stock-attribution-notice {
-    margin-top: 30px;
-    padding: 20px;
-    background: #f9f9f9;
-    border-left: 4px solid #0073aa;
-    border-radius: 4px;
-}
-
-.stock-attribution-notice h4 {
-    margin-top: 0;
-    color: #0073aa;
-}
-
-.stock-attribution-notice p {
-    margin-bottom: 10px;
-    line-height: 1.6;
-}
-
-.stock-attribution-notice a {
-    color: #0073aa;
-    text-decoration: none;
-}
-
-.stock-attribution-notice a:hover {
-    text-decoration: underline;
-}
-</style> 
+</div> 

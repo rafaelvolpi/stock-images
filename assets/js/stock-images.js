@@ -1,5 +1,3 @@
-console.log('Hello, bdkoder!');
-
 jQuery(document).ready(function($) {
     'use strict';
     
@@ -11,9 +9,15 @@ jQuery(document).ready(function($) {
         modalMode: false,
         
         init: function() {
-            this.bindEvents();
-            this.initSearchInterface();
-            this.initMediaModal();
+            try {
+                console.log('StockImages: Initializing...');
+                this.bindEvents();
+                this.initSearchInterface();
+                this.initMediaModal();
+                console.log('StockImages: Initialization complete');
+            } catch (error) {
+                console.error('StockImages: Error during initialization:', error);
+            }
         },
         
         bindEvents: function() {
@@ -62,11 +66,14 @@ jQuery(document).ready(function($) {
                 e.preventDefault();
                 var imageData = $(this).data('image');
                 var selectedSize = $(this).data('size');
-                // If imageData is a string, parse it
+                
+                // If imageData is a string, decode and parse it
                 if (typeof imageData === 'string') {
                     try {
-                        imageData = JSON.parse(imageData);
+                        // First decode the URI component, then parse JSON
+                        imageData = JSON.parse(decodeURIComponent(imageData));
                     } catch (err) {
+                        console.error('Error parsing image data:', err);
                         StockImages.showError('Invalid image data.');
                         return;
                     }
@@ -261,7 +268,7 @@ jQuery(document).ready(function($) {
             if (this.isLoading) return;
             
             this.isLoading = true;
-            this.showLoading(append);
+            this.showLoading();
             
             var selectedSource = $('#stock-source-select').val() || 'unsplash';
             
@@ -276,18 +283,29 @@ jQuery(document).ready(function($) {
                     source: selectedSource
                 },
                 success: function(response) {
-                    if (response.success) {
-                        StockImages.displayResults(response.data, append);
-                    } else {
-                        StockImages.showError(response.data);
-                    }
-                },
-                error: function() {
-                    StockImages.showError(stockImagesAjax.strings.error || 'An error occurred');
-                },
-                complete: function() {
                     StockImages.isLoading = false;
                     StockImages.hideLoading();
+                    
+                    if (response.success && response.data.results && response.data.results.length) {
+                        StockImages.renderResults(response.data.results, this.currentPage === 1);
+                        
+                        if (response.data.total_pages > this.currentPage) {
+                            $('#stock-load-more-container').show();
+                        } else {
+                            $('#stock-load-more-container').hide();
+                        }
+                    } else {
+                        if (this.currentPage === 1) {
+                            $('#stock-results').html('<div class="no-results"><p>' + (stockImagesAjax.strings.no_results || 'No images found.') + '</p></div>');
+                        }
+                        $('#stock-load-more-container').hide();
+                    }
+                }.bind(this),
+                error: function(xhr, status, error) {
+                    StockImages.isLoading = false;
+                    StockImages.hideLoading();
+                    StockImages.showError('Error searching ' + selectedSource + '. Please try again.');
+                    $('#stock-load-more-container').hide();
                 }
             });
         },
@@ -317,8 +335,10 @@ jQuery(document).ready(function($) {
                         StockImages.showModalError(response.data);
                     }
                 },
-                error: function() {
-                    StockImages.showModalError(stockImagesAjax.strings.error || 'An error occurred');
+                error: function(xhr, status, error) {
+                    $root.find('#stock-modal-spinner').hide();
+                    $root.find('#stock-modal-message').html('<span style="color:red;">Error searching ' + selectedSource + '.</span>');
+                    $root.find('#stock-modal-load-more-container').hide();
                 },
                 complete: function() {
                     StockImages.isLoading = false;
@@ -400,25 +420,28 @@ jQuery(document).ready(function($) {
             var mediumSize = source === 'pexels' ? '1200px' : '700px';
             var fullSize = source === 'pexels' ? 'Original' : '1920px';
             
+            // Properly encode the image data to handle quotes and special characters
+            var encodedImageData = encodeURIComponent(JSON.stringify(image));
+            
             return `
                 <div class="stock-image-card" data-image-id="${image.id}">
                     <div class="stock-image-wrapper">
                         <img src="${image.urls.small}" alt="${image.alt_description || 'Stock image'}" class="stock-image">
                         <div class="stock-image-overlay">
                             <div class="stock-download-buttons">
-                                <button class="stock-import-btn stock-import-circle" data-image='${JSON.stringify(image)}' data-size="small" aria-label="Import small image (${smallSize})">
+                                <button class="stock-import-btn stock-import-circle" data-image="${encodedImageData}" data-size="small" aria-label="Import small image (${smallSize})">
                                     <span class="stock-size-label">S</span>
                                     <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-6">
                                       <path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75V16.5M16.5 12 12 16.5m0 0L7.5 12m4.5 4.5V3" />
                                     </svg>
                                 </button>
-                                <button class="stock-import-btn stock-import-circle" data-image='${JSON.stringify(image)}' data-size="medium" aria-label="Import medium image (${mediumSize})">
+                                <button class="stock-import-btn stock-import-circle" data-image="${encodedImageData}" data-size="medium" aria-label="Import medium image (${mediumSize})">
                                     <span class="stock-size-label">M</span>
                                     <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-6">
                                       <path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75V16.5M16.5 12 12 16.5m0 0L7.5 12m4.5 4.5V3" />
                                     </svg>
                                 </button>
-                                <button class="stock-import-btn stock-import-circle" data-image='${JSON.stringify(image)}' data-size="full" aria-label="Import full image (${fullSize})">
+                                <button class="stock-import-btn stock-import-circle" data-image="${encodedImageData}" data-size="full" aria-label="Import full image (${fullSize})">
                                     <span class="stock-size-label">L</span>
                                     <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-6">
                                       <path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75V16.5M16.5 12 12 16.5m0 0L7.5 12m4.5 4.5V3" />
@@ -438,10 +461,6 @@ jQuery(document).ready(function($) {
         },
         
         importImage: function(imageData, selectedSize) {
-            console.log('Importing image data:', imageData); // Debug log
-            console.log('Image URLs:', imageData.urls); // Debug log - check URLs structure
-            console.log('Image URL regular:', imageData.urls?.regular); // Debug log - check specific URL
-            
             var button = $('.stock-import-btn[data-image*="' + imageData.id + '"]');
             button.prop('disabled', true);
             // Add spinner overlay
@@ -456,14 +475,12 @@ jQuery(document).ready(function($) {
                 image_data: imageData,
                 size: selectedSize
             };
-            console.log('Sending AJAX data:', ajaxData); // Debug log
             
             $.ajax({
                 url: stockImagesAjax.ajaxurl,
                 type: 'POST',
                 data: ajaxData,
                 success: function(response) {
-                    console.log('AJAX response:', response); // Debug log
                     if (response.success) {
                         StockImages.showSuccess(stockImagesAjax.strings.imported || 'Image imported successfully!');
                         
@@ -488,8 +505,7 @@ jQuery(document).ready(function($) {
                     }
                 },
                 error: function(xhr, status, error) {
-                    console.log('AJAX error:', {xhr: xhr, status: status, error: error}); // Debug log
-                    StockImages.showError(stockImagesAjax.strings.error || 'An error occurred');
+                    StockImages.showError('AJAX error: ' + error);
                 },
                 complete: function() {
                     button.prop('disabled', false);
@@ -517,13 +533,11 @@ jQuery(document).ready(function($) {
             // Implementation depends on the specific WordPress version and media library structure
         },
         
-        showLoading: function(append) {
-            var loadingHtml = '<div class="stock-loading">' + (stockImagesAjax.strings.searching || 'Searching...') + '</div>';
-            
-            if (append) {
-                $('#stock-results').append(loadingHtml);
+        showLoading: function() {
+            if (this.modalMode) {
+                $('#stock-modal-spinner').show();
             } else {
-                $('#stock-results').html(loadingHtml);
+                $('#stock-results').html('<div class="loading"><p>' + (stockImagesAjax.strings.searching || 'Searching...') + '</p></div>');
             }
         },
         
@@ -538,7 +552,9 @@ jQuery(document).ready(function($) {
         },
         
         hideLoading: function() {
-            $('.stock-loading').remove();
+            if (this.modalMode) {
+                $('#stock-modal-spinner').hide();
+            }
         },
         
         hideModalLoading: function() {
@@ -550,7 +566,11 @@ jQuery(document).ready(function($) {
         },
         
         showError: function(message) {
-            this.showNotice(message, 'error');
+            if (this.modalMode) {
+                $('#stock-modal-message').html('<span style="color:red;">' + message + '</span>');
+            } else {
+                $('#stock-results').html('<div class="error"><p>' + message + '</p></div>');
+            }
         },
         
         showModalError: function(message) {
@@ -627,6 +647,37 @@ jQuery(document).ready(function($) {
                     }
                 });
             }
+        },
+        
+        renderResults: function(results, isInitial) {
+            var html = '';
+            results.forEach(function(image) {
+                html += StockImages.createImageCard(image);
+            });
+            
+            if (isInitial) {
+                $('#stock-results').html(html);
+            } else {
+                $('#stock-results').append(html);
+            }
+            
+            // Import handler for new markup
+            $('.stock-import-btn').off('click').on('click', function(e) {
+                e.preventDefault();
+                var imageData = $(this).data('image');
+                var selectedSize = $(this).data('size');
+                if (typeof imageData === 'string') {
+                    try {
+                        // First decode the URI component, then parse JSON
+                        imageData = JSON.parse(decodeURIComponent(imageData));
+                    } catch (err) {
+                        console.error('Error parsing image data:', err);
+                        $('#stock-results').html('<div class="error"><p>Invalid image data.</p></div>');
+                        return;
+                    }
+                }
+                StockImages.importImage(imageData, selectedSize);
+            });
         }
     };
     
@@ -816,7 +867,7 @@ jQuery(document).ready(function($) {
                     $root.find('#stock-modal-load-more-container').hide();
                 }
             },
-            error: function() {
+            error: function(xhr, status, error) {
                 $root.find('#stock-modal-spinner').hide();
                 $root.find('#stock-modal-message').html('<span style="color:red;">Error searching ' + selectedSource + '.</span>');
                 $root.find('#stock-modal-load-more-container').hide();
@@ -843,8 +894,10 @@ jQuery(document).ready(function($) {
             var selectedSize = $(this).data('size');
             if (typeof imageData === 'string') {
                 try {
-                    imageData = JSON.parse(imageData);
+                    // First decode the URI component, then parse JSON
+                    imageData = JSON.parse(decodeURIComponent(imageData));
                 } catch (err) {
+                    console.error('Error parsing image data:', err);
                     $root.find('#stock-modal-message').html('<span style="color:red;">Invalid image data.</span>');
                     return;
                 }
