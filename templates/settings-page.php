@@ -9,6 +9,7 @@ if (isset($_POST['submit'])) {
     if (wp_verify_nonce($_POST['stock_settings_nonce'], 'stock_settings')) {
         update_option('unsplash_access_key', sanitize_text_field($_POST['unsplash_access_key']));
         update_option('unsplash_secret_key', sanitize_text_field($_POST['unsplash_secret_key']));
+        update_option('pexels_api_key', sanitize_text_field($_POST['pexels_api_key']));
         update_option('stock_images_max_size', sanitize_text_field($_POST['stock_images_max_size']));
         echo '<div class="notice notice-success"><p>' . __('Settings saved successfully!', 'stock-images') . '</p></div>';
     }
@@ -16,6 +17,7 @@ if (isset($_POST['submit'])) {
 
 $access_key = get_option('unsplash_access_key');
 $secret_key = get_option('unsplash_secret_key');
+$pexels_api_key = get_option('pexels_api_key');
 $max_size = get_option('stock_images_max_size', 'medium'); // Default to medium size
 ?>
 
@@ -66,6 +68,25 @@ $max_size = get_option('stock_images_max_size', 'medium'); // Default to medium 
                         </p>
                     </td>
                 </tr>
+                
+                <tr>
+                    <th scope="row">
+                        <label for="pexels_api_key"><?php _e('Pexels API Key', 'stock-images'); ?></label>
+                    </th>
+                    <td>
+                        <input 
+                            type="text" 
+                            id="pexels_api_key" 
+                            name="pexels_api_key" 
+                            value="<?php echo esc_attr($pexels_api_key); ?>" 
+                            class="stock-api-key-input"
+                        >
+                        <p class="stock-help-text">
+                            <?php _e('Your Pexels API Key. Get it from', 'stock-images'); ?>
+                            <a href="https://www.pexels.com/api/" target="_blank">https://www.pexels.com/api/</a>
+                        </p>
+                    </td>
+                </tr>
             </table>
             
             <h2><?php _e('Image Settings', 'stock-images'); ?></h2>
@@ -77,9 +98,9 @@ $max_size = get_option('stock_images_max_size', 'medium'); // Default to medium 
                     </th>
                     <td>
                         <select id="stock_images_max_size" name="stock_images_max_size" class="stock-api-key-input">
-                            <option value="small" <?php selected($max_size, 'small'); ?>><?php _e('Small (350px width)', 'stock-images'); ?></option>
-                            <option value="medium" <?php selected($max_size, 'medium'); ?>><?php _e('Medium (700px width)', 'stock-images'); ?></option>
-                            <option value="full" <?php selected($max_size, 'full'); ?>><?php _e('Full (1920px width)', 'stock-images'); ?></option>
+                            <option value="small" <?php selected($max_size, 'small'); ?>><?php _e('Small (350px width - Unsplash, 350px width - Pexels)', 'stock-images'); ?></option>
+                            <option value="medium" <?php selected($max_size, 'medium'); ?>><?php _e('Medium (700px width - Unsplash, 1200px width - Pexels)', 'stock-images'); ?></option>
+                            <option value="full" <?php selected($max_size, 'full'); ?>><?php _e('Full (1920px width - Unsplash, Original size - Pexels)', 'stock-images'); ?></option>
                         </select>
                         <p class="stock-help-text">
                             <?php _e('Choose the maximum size of images to download. Smaller sizes download faster and use less storage space.', 'stock-images'); ?>
@@ -96,38 +117,75 @@ $max_size = get_option('stock_images_max_size', 'medium'); // Default to medium 
     
     <!-- API Key Instructions -->
     <div class="stock-api-instructions">
-        <h3><?php _e('How to Get Your Unsplash API Keys', 'stock-images'); ?></h3>
+        <h3><?php _e('How to Get Your API Keys', 'stock-images'); ?></h3>
         
-        <ol>
-            <li>
-                <?php _e('Go to', 'stock-images'); ?>
-                <a href="https://unsplash.com/developers" target="_blank">https://unsplash.com/developers</a>
-            </li>
-            <li><?php _e('Sign in to your Unsplash account or create a new one.', 'stock-images'); ?></li>
-            <li><?php _e('Click "New Application" to register your application.', 'stock-images'); ?></li>
-            <li><?php _e('Fill in the application details:', 'stock-images'); ?>
-                <ul>
-                    <li><strong><?php _e('Application name:', 'stock-images'); ?></strong> <?php _e('Your website or blog name', 'stock-images'); ?></li>
-                    <li><strong><?php _e('Description:', 'stock-images'); ?></strong> <?php _e('Brief description of how you\'ll use Unsplash images', 'stock-images'); ?></li>
-                    <li><strong><?php _e('What are you building:', 'stock-images'); ?></strong> <?php _e('WordPress website/blog', 'stock-images'); ?></li>
-                </ul>
-            </li>
-            <li><?php _e('Accept the terms and create your application.', 'stock-images'); ?></li>
-            <li><?php _e('Copy your Access Key and paste it in the field above.', 'stock-images'); ?></li>
-        </ol>
+        <div class="stock-api-section">
+            <h4><?php _e('Unsplash API', 'stock-images'); ?></h4>
+            <ol>
+                <li>
+                    <?php _e('Go to', 'stock-images'); ?>
+                    <a href="https://unsplash.com/developers" target="_blank">https://unsplash.com/developers</a>
+                </li>
+                <li><?php _e('Sign in to your Unsplash account or create a new one.', 'stock-images'); ?></li>
+                <li><?php _e('Click "New Application" to register your application.', 'stock-images'); ?></li>
+                <li><?php _e('Fill in the application details:', 'stock-images'); ?>
+                    <ul>
+                        <li><strong><?php _e('Application name:', 'stock-images'); ?></strong> <?php _e('Your website or blog name', 'stock-images'); ?></li>
+                        <li><strong><?php _e('Description:', 'stock-images'); ?></strong> <?php _e('Brief description of how you\'ll use Unsplash images', 'stock-images'); ?></li>
+                        <li><strong><?php _e('What are you building:', 'stock-images'); ?></strong> <?php _e('WordPress website/blog', 'stock-images'); ?></li>
+                    </ul>
+                </li>
+                <li><?php _e('Accept the terms and create your application.', 'stock-images'); ?></li>
+                <li><?php _e('Copy your Access Key and paste it in the field above.', 'stock-images'); ?></li>
+            </ol>
+        </div>
+        
+        <div class="stock-api-section">
+            <h4><?php _e('Pexels API', 'stock-images'); ?></h4>
+            <ol>
+                <li>
+                    <?php _e('Go to', 'stock-images'); ?>
+                    <a href="https://www.pexels.com/api/" target="_blank">https://www.pexels.com/api/</a>
+                </li>
+                <li><?php _e('Sign in to your Pexels account or create a new one.', 'stock-images'); ?></li>
+                <li><?php _e('Click "Get Started" to apply for API access.', 'stock-images'); ?></li>
+                <li><?php _e('Fill in the application details:', 'stock-images'); ?>
+                    <ul>
+                        <li><strong><?php _e('Application name:', 'stock-images'); ?></strong> <?php _e('Your website or blog name', 'stock-images'); ?></li>
+                        <li><strong><?php _e('Description:', 'stock-images'); ?></strong> <?php _e('Brief description of how you\'ll use Pexels images', 'stock-images'); ?></li>
+                        <li><strong><?php _e('Website URL:', 'stock-images'); ?></strong> <?php _e('Your WordPress site URL', 'stock-images'); ?></li>
+                    </ul>
+                </li>
+                <li><?php _e('Submit your application and wait for approval.', 'stock-images'); ?></li>
+                <li><?php _e('Once approved, copy your API key and paste it in the field above.', 'stock-images'); ?></li>
+            </ol>
+        </div>
         
         <div class="stock-rate-limits">
             <h4><?php _e('Rate Limits', 'stock-images'); ?></h4>
             <p>
-                <?php _e('Unsplash API has the following rate limits:', 'stock-images'); ?>
+                <?php _e('Both APIs have the following rate limits:', 'stock-images'); ?>
             </p>
-            <ul>
-                <li><?php _e('Demo applications: 50 requests per hour', 'stock-images'); ?></li>
-                <li><?php _e('Production applications: 5,000 requests per hour', 'stock-images'); ?></li>
-            </ul>
-            <p>
-                <?php _e('For production use, make sure to upgrade your application in the Unsplash developer dashboard.', 'stock-images'); ?>
-            </p>
+            <div class="stock-rate-limit-section">
+                <h5><?php _e('Unsplash API', 'stock-images'); ?></h5>
+                <ul>
+                    <li><?php _e('Demo applications: 50 requests per hour', 'stock-images'); ?></li>
+                    <li><?php _e('Production applications: 5,000 requests per hour', 'stock-images'); ?></li>
+                </ul>
+                <p>
+                    <?php _e('For production use, make sure to upgrade your application in the Unsplash developer dashboard.', 'stock-images'); ?>
+                </p>
+            </div>
+            <div class="stock-rate-limit-section">
+                <h5><?php _e('Pexels API', 'stock-images'); ?></h5>
+                <ul>
+                    <li><?php _e('Free tier: 200 requests per hour', 'stock-images'); ?></li>
+                    <li><?php _e('Paid plans: Higher limits available', 'stock-images'); ?></li>
+                </ul>
+                <p>
+                    <?php _e('For higher limits, consider upgrading to a paid plan in your Pexels account.', 'stock-images'); ?>
+                </p>
+            </div>
         </div>
     </div>
     
@@ -142,7 +200,7 @@ $max_size = get_option('stock_images_max_size', 'medium'); // Default to medium 
         
         <div class="stock-guideline">
             <h4><?php _e('Commercial Use', 'stock-images'); ?></h4>
-            <p><?php _e('Stock images are free to use for commercial and noncommercial purposes without permission from the photographer or Unsplash.', 'stock-images'); ?></p>
+            <p><?php _e('Both Unsplash and Pexels images are free to use for commercial and noncommercial purposes without permission from the photographer.', 'stock-images'); ?></p>
         </div>
         
         <div class="stock-guideline">
@@ -150,10 +208,16 @@ $max_size = get_option('stock_images_max_size', 'medium'); // Default to medium 
             <p><?php _e('You can modify stock images to fit your needs, but you cannot sell them as stock photos.', 'stock-images'); ?></p>
         </div>
         
-        <p>
-            <?php _e('For complete usage guidelines, visit:', 'stock-images'); ?>
-            <a href="https://unsplash.com/license" target="_blank">https://unsplash.com/license</a>
-        </p>
+        <div class="stock-guideline">
+            <h4><?php _e('License Information', 'stock-images'); ?></h4>
+            <p>
+                <?php _e('For complete usage guidelines, visit:', 'stock-images'); ?>
+            </p>
+            <ul>
+                <li><a href="https://unsplash.com/license" target="_blank"><?php _e('Unsplash License', 'stock-images'); ?></a></li>
+                <li><a href="https://www.pexels.com/license/" target="_blank"><?php _e('Pexels License', 'stock-images'); ?></a></li>
+            </ul>
+        </div>
     </div>
 </div>
 
@@ -170,6 +234,21 @@ $max_size = get_option('stock_images_max_size', 'medium'); // Default to medium 
 .stock-api-instructions h3 {
     margin-top: 0;
     color: #23282d;
+}
+
+.stock-api-section {
+    margin-bottom: 30px;
+    padding: 20px;
+    background: #f9f9f9;
+    border-radius: 4px;
+    border-left: 4px solid #0073aa;
+}
+
+.stock-api-section h4 {
+    margin-top: 0;
+    color: #0073aa;
+    font-size: 16px;
+    font-weight: 600;
 }
 
 .stock-api-instructions ol {
@@ -197,6 +276,26 @@ $max_size = get_option('stock_images_max_size', 'medium'); // Default to medium 
 .stock-rate-limits h4 {
     margin-top: 0;
     color: #0073aa;
+}
+
+.stock-rate-limit-section {
+    margin-bottom: 20px;
+    padding: 15px;
+    background: #fff;
+    border-radius: 4px;
+    border: 1px solid #ddd;
+}
+
+.stock-rate-limit-section h5 {
+    margin-top: 0;
+    color: #23282d;
+    font-size: 14px;
+    font-weight: 600;
+}
+
+.stock-rate-limit-section ul {
+    margin-left: 20px;
+    margin-top: 10px;
 }
 
 .stock-usage-guidelines {

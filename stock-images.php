@@ -62,6 +62,7 @@ class StockImages {
         // Register settings
         register_setting('stock_images_options', 'unsplash_access_key');
         register_setting('stock_images_options', 'unsplash_secret_key');
+        register_setting('stock_images_options', 'pexels_api_key');
         register_setting('stock_images_options', 'stock_images_max_size');
     }
     
@@ -207,7 +208,18 @@ class StockImages {
         $query = sanitize_text_field($_POST['query']);
         $page = intval($_POST['page']) ?: 1;
         $per_page = 20;
+        $source = sanitize_text_field($_POST['source'] ?? 'unsplash');
         
+        if ($source === 'unsplash') {
+            $this->search_unsplash($query, $page, $per_page);
+        } elseif ($source === 'pexels') {
+            $this->search_pexels($query, $page, $per_page);
+        } else {
+            wp_send_json_error(__('Invalid source specified.', 'stock-images'));
+        }
+    }
+    
+    private function search_unsplash($query, $page, $per_page) {
         $access_key = get_option('unsplash_access_key');
         if (empty($access_key)) {
             wp_send_json_error(__('Unsplash API key not configured.', 'stock-images'));
@@ -236,7 +248,79 @@ class StockImages {
             wp_send_json_error(__('Invalid response from Unsplash API.', 'stock-images'));
         }
         
+        // Add source information to each result
+        foreach ($data['results'] as &$result) {
+            $result['source'] = 'unsplash';
+        }
+        
         wp_send_json_success($data);
+    }
+    
+    private function search_pexels($query, $page, $per_page) {
+        $api_key = get_option('pexels_api_key');
+        if (empty($api_key)) {
+            wp_send_json_error(__('Pexels API key not configured.', 'stock-images'));
+        }
+        
+        $url = add_query_arg(array(
+            'query' => $query,
+            'page' => $page,
+            'per_page' => $per_page,
+        ), 'https://api.pexels.com/v1/search');
+        
+        $response = wp_remote_get($url, array(
+            'headers' => array(
+                'Authorization' => $api_key,
+            ),
+        ));
+        
+        if (is_wp_error($response)) {
+            wp_send_json_error($response->get_error_message());
+        }
+        
+        $body = wp_remote_retrieve_body($response);
+        $data = json_decode($body, true);
+        
+        if (empty($data) || !isset($data['photos'])) {
+            wp_send_json_error(__('Invalid response from Pexels API.', 'stock-images'));
+        }
+        
+        // Transform Pexels data to match Unsplash format for consistency
+        $transformed_data = array(
+            'results' => array(),
+            'total' => $data['total_results'] ?? 0,
+            'total_pages' => ceil(($data['total_results'] ?? 0) / $per_page)
+        );
+        
+        foreach ($data['photos'] as $photo) {
+            $transformed_photo = array(
+                'id' => $photo['id'],
+                'source' => 'pexels',
+                'urls' => array(
+                    'small' => $photo['src']['medium'],
+                    'regular' => $photo['src']['large'],
+                    'full' => $photo['src']['original'],
+                    'raw' => $photo['src']['original']
+                ),
+                'alt_description' => $photo['alt'] ?? '',
+                'description' => $photo['alt'] ?? '',
+                'user' => array(
+                    'name' => $photo['photographer'] ?? 'Unknown',
+                    'links' => array(
+                        'html' => $photo['photographer_url'] ?? ''
+                    )
+                ),
+                'links' => array(
+                    'html' => $photo['url'] ?? ''
+                ),
+                'width' => $photo['width'] ?? 0,
+                'height' => $photo['height'] ?? 0
+            );
+            
+            $transformed_data['results'][] = $transformed_photo;
+        }
+        
+        wp_send_json_success($transformed_data);
     }
     
     public function ajax_import() {
@@ -335,8 +419,9 @@ class StockImages {
         $upload_path = $upload_dir['path'];
         $upload_url = $upload_dir['url'];
         
-        // Create filename
-        $filename = 'unsplash-' . $image_id . '.jpg';
+        // Create filename based on source
+        $source = isset($image_data['source']) ? $image_data['source'] : 'unsplash';
+        $filename = $source . '-' . $image_id . '.jpg';
         $file_path = $upload_path . '/' . $filename;
         
         // Save the image
@@ -349,16 +434,21 @@ class StockImages {
         
         error_log('Stock Images Debug - File saved successfully to: ' . $file_path);
         
-        // Prepare attachment data
+        // Prepare attachment data with source-specific attribution
+        $source_name = $source === 'pexels' ? 'Pexels' : 'Unsplash';
+        $source_url = $source === 'pexels' ? 'https://pexels.com' : 'https://unsplash.com';
+        
         $attachment = array(
             'post_mime_type' => 'image/jpeg',
-            'post_title' => sanitize_text_field($image_data['alt_description'] ?: $image_data['description'] ?: 'Unsplash Image'),
+            'post_title' => sanitize_text_field($image_data['alt_description'] ?: $image_data['description'] ?: $source_name . ' Image'),
             'post_content' => '',
             'post_status' => 'inherit',
             'post_excerpt' => sprintf(
-                __('Photo by <a href="%s" target="_blank">%s</a> on <a href="https://unsplash.com" target="_blank">Unsplash</a>', 'stock-images'),
+                __('Photo by <a href="%s" target="_blank">%s</a> on <a href="%s" target="_blank">%s</a>', 'stock-images'),
                 $photographer_url,
-                $photographer
+                $photographer,
+                $source_url,
+                $source_name
             ),
         );
         
@@ -377,11 +467,12 @@ class StockImages {
         $attachment_data = wp_generate_attachment_metadata($attachment_id, $file_path);
         wp_update_attachment_metadata($attachment_id, $attachment_data);
         
-        // Store Unsplash metadata
-        update_post_meta($attachment_id, '_unsplash_id', $image_id);
-        update_post_meta($attachment_id, '_unsplash_photographer', $photographer);
-        update_post_meta($attachment_id, '_unsplash_photographer_url', $photographer_url);
-        update_post_meta($attachment_id, '_unsplash_url', isset($image_data['links']['html']) ? $image_data['links']['html'] : '');
+        // Store source-specific metadata
+        update_post_meta($attachment_id, '_stock_source', $source);
+        update_post_meta($attachment_id, '_' . $source . '_id', $image_id);
+        update_post_meta($attachment_id, '_' . $source . '_photographer', $photographer);
+        update_post_meta($attachment_id, '_' . $source . '_photographer_url', $photographer_url);
+        update_post_meta($attachment_id, '_' . $source . '_url', isset($image_data['links']['html']) ? $image_data['links']['html'] : '');
         
         wp_send_json_success(array(
             'attachment_id' => $attachment_id,
@@ -394,27 +485,54 @@ class StockImages {
     }
     
     public function add_stock_fields($form_fields, $post) {
-        $unsplash_id = get_post_meta($post->ID, '_unsplash_id', true);
-        $photographer = get_post_meta($post->ID, '_unsplash_photographer', true);
-        $photographer_url = get_post_meta($post->ID, '_unsplash_photographer_url', true);
-        $unsplash_url = get_post_meta($post->ID, '_unsplash_url', true);
+        $stock_source = get_post_meta($post->ID, '_stock_source', true);
         
-        if ($unsplash_id) {
-            $form_fields['stock_info'] = array(
-                'label' => __('Stock Image Info', 'stock-images'),
-                'input' => 'html',
-                'html' => sprintf(
-                    '<p><strong>%s:</strong> %s</p><p><strong>%s:</strong> <a href="%s" target="_blank">%s</a></p><p><strong>%s:</strong> <a href="%s" target="_blank">%s</a></p>',
-                    __('Photo ID', 'stock-images'),
-                    $unsplash_id,
-                    __('Photographer', 'stock-images'),
-                    $photographer_url,
-                    $photographer,
-                    __('Source Link', 'stock-images'),
-                    $unsplash_url,
-                    __('View on Unsplash', 'stock-images')
-                )
-            );
+        if ($stock_source === 'unsplash') {
+            $unsplash_id = get_post_meta($post->ID, '_unsplash_id', true);
+            $photographer = get_post_meta($post->ID, '_unsplash_photographer', true);
+            $photographer_url = get_post_meta($post->ID, '_unsplash_photographer_url', true);
+            $unsplash_url = get_post_meta($post->ID, '_unsplash_url', true);
+            
+            if ($unsplash_id) {
+                $form_fields['stock_info'] = array(
+                    'label' => __('Stock Image Info', 'stock-images'),
+                    'input' => 'html',
+                    'html' => sprintf(
+                        '<p><strong>%s:</strong> %s</p><p><strong>%s:</strong> <a href="%s" target="_blank">%s</a></p><p><strong>%s:</strong> <a href="%s" target="_blank">%s</a></p>',
+                        __('Photo ID', 'stock-images'),
+                        $unsplash_id,
+                        __('Photographer', 'stock-images'),
+                        $photographer_url,
+                        $photographer,
+                        __('Source Link', 'stock-images'),
+                        $unsplash_url,
+                        __('View on Unsplash', 'stock-images')
+                    )
+                );
+            }
+        } elseif ($stock_source === 'pexels') {
+            $pexels_id = get_post_meta($post->ID, '_pexels_id', true);
+            $photographer = get_post_meta($post->ID, '_pexels_photographer', true);
+            $photographer_url = get_post_meta($post->ID, '_pexels_photographer_url', true);
+            $pexels_url = get_post_meta($post->ID, '_pexels_url', true);
+            
+            if ($pexels_id) {
+                $form_fields['stock_info'] = array(
+                    'label' => __('Stock Image Info', 'stock-images'),
+                    'input' => 'html',
+                    'html' => sprintf(
+                        '<p><strong>%s:</strong> %s</p><p><strong>%s:</strong> <a href="%s" target="_blank">%s</a></p><p><strong>%s:</strong> <a href="%s" target="_blank">%s</a></p>',
+                        __('Photo ID', 'stock-images'),
+                        $pexels_id,
+                        __('Photographer', 'stock-images'),
+                        $photographer_url,
+                        $photographer,
+                        __('Source Link', 'stock-images'),
+                        $pexels_url,
+                        __('View on Pexels', 'stock-images')
+                    )
+                );
+            }
         }
         
         return $form_fields;
@@ -433,7 +551,7 @@ class StockImages {
         $count = $wpdb->get_var(
             $wpdb->prepare(
                 "SELECT COUNT(*) FROM {$wpdb->postmeta} WHERE meta_key = %s",
-                '_unsplash_id'
+                '_stock_source'
             )
         );
         return intval($count);
@@ -455,7 +573,7 @@ class StockImages {
                 WHERE pm.meta_key = %s 
                 AND p.post_type = 'attachment' 
                 AND p.post_date BETWEEN %s AND %s",
-                '_unsplash_id',
+                '_stock_source',
                 $start_of_month,
                 $end_of_month
             )
@@ -480,14 +598,14 @@ class StockImages {
         
         $recent_imports = $wpdb->get_results(
             $wpdb->prepare(
-                "SELECT p.ID, p.post_title, p.post_date, pm.meta_value as unsplash_id 
+                "SELECT p.ID, p.post_title, p.post_date, pm.meta_value as stock_source 
                 FROM {$wpdb->posts} p 
                 INNER JOIN {$wpdb->postmeta} pm ON p.ID = pm.post_id 
                 WHERE pm.meta_key = %s 
                 AND p.post_type = 'attachment' 
                 ORDER BY p.post_date DESC 
                 LIMIT 10",
-                '_unsplash_id'
+                '_stock_source'
             )
         );
         
@@ -499,8 +617,10 @@ class StockImages {
         echo '<div class="stock-recent-grid">';
         foreach ($recent_imports as $import) {
             $image_url = wp_get_attachment_image_url($import->ID, 'thumbnail');
-            $photographer = get_post_meta($import->ID, '_unsplash_photographer', true);
-            $photographer_url = get_post_meta($import->ID, '_unsplash_photographer_url', true);
+            $stock_source = $import->stock_source;
+            $photographer = get_post_meta($import->ID, '_' . $stock_source . '_photographer', true);
+            $photographer_url = get_post_meta($import->ID, '_' . $stock_source . '_photographer_url', true);
+            $source_name = $stock_source === 'pexels' ? 'Pexels' : 'Unsplash';
             
             echo '<div class="stock-recent-item">';
             if ($image_url) {
@@ -508,6 +628,7 @@ class StockImages {
             }
             echo '<div class="stock-recent-info">';
             echo '<p class="stock-recent-title">' . esc_html($import->post_title) . '</p>';
+            echo '<p class="stock-recent-source">' . esc_html($source_name) . '</p>';
             if ($photographer) {
                 echo '<p class="stock-recent-photographer">';
                 echo __('Photo by', 'stock-images') . ' ';
@@ -553,6 +674,12 @@ class StockImages {
             font-weight: 600;
             font-size: 13px;
             line-height: 1.3;
+        }
+        .stock-recent-source {
+            margin: 0 0 3px 0;
+            font-size: 11px;
+            color: #0073aa;
+            font-weight: 600;
         }
         .stock-recent-photographer {
             margin: 0 0 3px 0;

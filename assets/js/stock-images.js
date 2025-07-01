@@ -41,6 +41,22 @@ jQuery(document).ready(function($) {
                 StockImages.modalLoadMore();
             });
             
+            // Source selector change - trigger new search
+            $(document).on('change', '#stock-source-select', function() {
+                if (StockImages.currentQuery) {
+                    StockImages.currentPage = 1;
+                    StockImages.performSearch();
+                }
+            });
+            
+            // Modal source selector change - trigger new search
+            $(document).on('change', '#stock-modal-source-select', function() {
+                if (StockImages.currentQuery) {
+                    StockImages.currentPage = 1;
+                    StockImages.performModalSearch();
+                }
+            });
+            
             // Import image button
             $(document).on('click', '.stock-import-btn', function(e) {
                 e.preventDefault();
@@ -131,6 +147,10 @@ jQuery(document).ready(function($) {
                         </div>
                         <div class="media-panel-content">
                             <div class="stock-modal-search">
+                                <select id="stock-modal-source-select" class="stock-source-select">
+                                    <option value="unsplash">Unsplash</option>
+                                    <option value="pexels">Pexels</option>
+                                </select>
                                 <input type="text" id="stock-modal-search-input" placeholder="${stockImagesAjax.strings.search_placeholder || 'Search for images...'}" class="stock-search-input">
                                 <button type="button" id="stock-modal-search-btn" class="button button-primary">${stockImagesAjax.strings.search_button || 'Search'}</button>
                             </div>
@@ -178,6 +198,10 @@ jQuery(document).ready(function($) {
                     <div class="stock-search-header">
                         <h3>${stockImagesAjax.strings.searching || 'Search Stock Images'}</h3>
                         <div class="stock-search-form-wrapper">
+                            <select id="stock-source-select" class="stock-source-select">
+                                <option value="unsplash">Unsplash</option>
+                                <option value="pexels">Pexels</option>
+                            </select>
                             <input type="text" id="stock-search-input" placeholder="Search for images..." class="stock-search-input">
                             <button type="submit" class="button button-primary stock-search-btn">Search</button>
                         </div>
@@ -239,6 +263,8 @@ jQuery(document).ready(function($) {
             this.isLoading = true;
             this.showLoading(append);
             
+            var selectedSource = $('#stock-source-select').val() || 'unsplash';
+            
             $.ajax({
                 url: stockImagesAjax.ajaxurl,
                 type: 'POST',
@@ -246,7 +272,8 @@ jQuery(document).ready(function($) {
                     action: 'stock_images_search',
                     nonce: stockImagesAjax.nonce,
                     query: this.currentQuery,
-                    page: this.currentPage
+                    page: this.currentPage,
+                    source: selectedSource
                 },
                 success: function(response) {
                     if (response.success) {
@@ -271,6 +298,8 @@ jQuery(document).ready(function($) {
             this.isLoading = true;
             this.showModalLoading(append);
             
+            var selectedSource = $('#stock-modal-source-select').val() || 'unsplash';
+            
             $.ajax({
                 url: stockImagesAjax.ajaxurl,
                 type: 'POST',
@@ -278,7 +307,8 @@ jQuery(document).ready(function($) {
                     action: 'stock_images_search',
                     nonce: stockImagesAjax.nonce,
                     query: this.currentQuery,
-                    page: this.currentPage
+                    page: this.currentPage,
+                    source: selectedSource
                 },
                 success: function(response) {
                     if (response.success) {
@@ -364,25 +394,31 @@ jQuery(document).ready(function($) {
         },
         
         createImageCard: function(image) {
+            // Determine source-specific size descriptions
+            var source = image.source || 'unsplash';
+            var smallSize = source === 'pexels' ? '350px' : '350px';
+            var mediumSize = source === 'pexels' ? '1200px' : '700px';
+            var fullSize = source === 'pexels' ? 'Original' : '1920px';
+            
             return `
                 <div class="stock-image-card" data-image-id="${image.id}">
                     <div class="stock-image-wrapper">
                         <img src="${image.urls.small}" alt="${image.alt_description || 'Stock image'}" class="stock-image">
                         <div class="stock-image-overlay">
                             <div class="stock-download-buttons">
-                                <button class="stock-import-btn stock-import-circle" data-image='${JSON.stringify(image)}' data-size="small" aria-label="Import small image (350px)">
+                                <button class="stock-import-btn stock-import-circle" data-image='${JSON.stringify(image)}' data-size="small" aria-label="Import small image (${smallSize})">
                                     <span class="stock-size-label">S</span>
                                     <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-6">
                                       <path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75V16.5M16.5 12 12 16.5m0 0L7.5 12m4.5 4.5V3" />
                                     </svg>
                                 </button>
-                                <button class="stock-import-btn stock-import-circle" data-image='${JSON.stringify(image)}' data-size="medium" aria-label="Import medium image (700px)">
+                                <button class="stock-import-btn stock-import-circle" data-image='${JSON.stringify(image)}' data-size="medium" aria-label="Import medium image (${mediumSize})">
                                     <span class="stock-size-label">M</span>
                                     <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-6">
                                       <path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75V16.5M16.5 12 12 16.5m0 0L7.5 12m4.5 4.5V3" />
                                     </svg>
                                 </button>
-                                <button class="stock-import-btn stock-import-circle" data-image='${JSON.stringify(image)}' data-size="full" aria-label="Import full image (1920px)">
+                                <button class="stock-import-btn stock-import-circle" data-image='${JSON.stringify(image)}' data-size="full" aria-label="Import full image (${fullSize})">
                                     <span class="stock-size-label">L</span>
                                     <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-6">
                                       <path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75V16.5M16.5 12 12 16.5m0 0L7.5 12m4.5 4.5V3" />
@@ -650,7 +686,7 @@ jQuery(document).ready(function($) {
                 render: function() {
                     this.$el.html(this.template());
                     // Inject Unsplash search UI
-                    renderUnsplashUI(this.$el);
+                    renderStockImagesUI(this.$el);
                     return this;
                 }
             });
@@ -663,117 +699,141 @@ jQuery(document).ready(function($) {
     // Add the custom template to the page (just a root div)
     $('body').append('<script type="text/html" id="tmpl-stock-images-tab-template"><div id="stock-images-modal-root"></div></script>');
 
-    // --- Unsplash UI logic ---
-    function renderUnsplashUI($root) {
+    // --- Stock Images UI logic (supports both Unsplash and Pexels) ---
+    function renderStockImagesUI($root) {
         // Track modal search state
-        $root.data('unsplashPage', 1);
-        $root.data('unsplashQuery', '');
-        $root.data('unsplashTotalPages', 1);
+        $root.data('stockPage', 1);
+        $root.data('stockQuery', '');
+        $root.data('stockTotalPages', 1);
+        $root.data('stockSource', 'unsplash');
 
         var html = '' +
-            '<form id="stock-unsplash-search-form">' +
-            '  <input type="text" id="stock-unsplash-search-input" placeholder="Search Unsplash...">' +
-            '  <button type="submit" class="button button-primary">Search</button>' +
-            '  <span id="stock-unsplash-spinner" style="display:none;margin-left:10px;">Searching...</span>' +
-            '</form>' +
-            '<div id="stock-unsplash-results"></div>' +
-            '<div id="stock-unsplash-load-more-container" class="stock-load-more-container" style="display:none;">' +
-            '  <button id="stock-unsplash-load-more" class="button">Load More</button>' +
+            '<div class="stock-modal-search">' +
+            '  <select id="stock-modal-source-select" class="stock-source-select">' +
+            '    <option value="unsplash">Unsplash</option>' +
+            '    <option value="pexels">Pexels</option>' +
+            '  </select>' +
+            '  <input type="text" id="stock-modal-search-input" placeholder="Search for images..." class="stock-search-input">' +
+            '  <button type="submit" id="stock-modal-search-btn" class="button button-primary">Search</button>' +
+            '  <span id="stock-modal-spinner" style="display:none;margin-left:10px;">Searching...</span>' +
             '</div>' +
-            '<div id="stock-unsplash-message" style="margin-top:10px;"></div>';
+            '<div id="stock-modal-results"></div>' +
+            '<div id="stock-modal-load-more-container" class="stock-load-more-container" style="display:none;">' +
+            '  <button id="stock-modal-load-more" class="button">Load More</button>' +
+            '</div>' +
+            '<div id="stock-modal-message" style="margin-top:10px;"></div>';
         $root.find('#stock-images-modal-root').html(html);
 
+        // Source selector change handler
+        $root.find('#stock-modal-source-select').on('change', function() {
+            var selectedSource = $(this).val();
+            $root.data('stockSource', selectedSource);
+            
+            // If there's an active query, trigger a new search
+            var currentQuery = $root.data('stockQuery');
+            if (currentQuery) {
+                $root.data('stockPage', 1);
+                performModalSearch($root, currentQuery, 1, false);
+            }
+        });
+
         // Search handler
-        $root.find('#stock-unsplash-search-form').on('submit', function(e) {
+        $root.find('#stock-modal-search-btn').on('click', function(e) {
             e.preventDefault();
-            var query = $root.find('#stock-unsplash-search-input').val().trim();
+            var query = $root.find('#stock-modal-search-input').val().trim();
             if (!query) return;
-            $root.data('unsplashQuery', query);
-            $root.data('unsplashPage', 1);
-            $root.find('#stock-unsplash-spinner').show();
-            $root.find('#stock-unsplash-results').empty();
-            $root.find('#stock-unsplash-message').empty();
-            $.ajax({
-                url: stockImagesAjax.ajaxurl,
-                type: 'POST',
-                data: {
-                    action: 'stock_images_search',
-                    nonce: stockImagesAjax.nonce,
-                    query: query,
-                    page: 1
-                },
-                success: function(response) {
-                    $root.find('#stock-unsplash-spinner').hide();
-                    if (response.success && response.data.results && response.data.results.length) {
-                        renderResults($root, response.data.results, false);
-                        $root.data('unsplashTotalPages', response.data.total_pages || 1);
-                        if (response.data.total_pages > 1) {
-                            $root.find('#stock-unsplash-load-more-container').show();
-                        } else {
-                            $root.find('#stock-unsplash-load-more-container').hide();
-                        }
-                    } else {
-                        $root.find('#stock-unsplash-results').html('<p>No images found.</p>');
-                        $root.find('#stock-unsplash-load-more-container').hide();
-                    }
-                },
-                error: function() {
-                    $root.find('#stock-unsplash-spinner').hide();
-                    $root.find('#stock-unsplash-message').html('<span style="color:red;">Error searching Unsplash.</span>');
-                    $root.find('#stock-unsplash-load-more-container').hide();
+            
+            $root.data('stockQuery', query);
+            $root.data('stockPage', 1);
+            performModalSearch($root, query, 1, false);
+        });
+
+        // Search input with debounce
+        var searchTimeout;
+        $root.find('#stock-modal-search-input').on('input', function() {
+            clearTimeout(searchTimeout);
+            searchTimeout = setTimeout(function() {
+                var query = $root.find('#stock-modal-search-input').val().trim();
+                if (!query) {
+                    $root.find('#stock-modal-results').empty();
+                    $root.find('#stock-modal-load-more-container').hide();
+                    return;
                 }
-            });
+                $root.data('stockQuery', query);
+                $root.data('stockPage', 1);
+                performModalSearch($root, query, 1, false);
+            }, 500);
         });
 
         // Load More handler
-        $root.on('click', '#stock-unsplash-load-more', function(e) {
+        $root.on('click', '#stock-modal-load-more', function(e) {
             e.preventDefault();
-            var query = $root.data('unsplashQuery');
-            var page = $root.data('unsplashPage') + 1;
-            var totalPages = $root.data('unsplashTotalPages') || 1;
+            var query = $root.data('stockQuery');
+            var page = $root.data('stockPage') + 1;
+            var totalPages = $root.data('stockTotalPages') || 1;
             if (!query || page > totalPages) return;
-            $root.find('#stock-unsplash-spinner').show();
-            $.ajax({
-                url: stockImagesAjax.ajaxurl,
-                type: 'POST',
-                data: {
-                    action: 'stock_images_search',
-                    nonce: stockImagesAjax.nonce,
-                    query: query,
-                    page: page
-                },
-                success: function(response) {
-                    $root.find('#stock-unsplash-spinner').hide();
-                    if (response.success && response.data.results && response.data.results.length) {
-                        renderResults($root, response.data.results, true);
-                        $root.data('unsplashPage', page);
-                        $root.data('unsplashTotalPages', response.data.total_pages || totalPages);
-                        if (page < (response.data.total_pages || totalPages)) {
-                            $root.find('#stock-unsplash-load-more-container').show();
-                        } else {
-                            $root.find('#stock-unsplash-load-more-container').hide();
-                        }
-                    } else {
-                        $root.find('#stock-unsplash-load-more-container').hide();
-                    }
-                },
-                error: function() {
-                    $root.find('#stock-unsplash-spinner').hide();
-                    $root.find('#stock-unsplash-message').html('<span style="color:red;">Error loading more images.</span>');
-                }
-            });
+            
+            performModalSearch($root, query, page, true);
         });
     }
 
-    function renderResults($root, results, append) {
+    function performModalSearch($root, query, page, append) {
+        var selectedSource = $root.find('#stock-modal-source-select').val() || 'unsplash';
+        
+        $root.find('#stock-modal-spinner').show();
+        $root.find('#stock-modal-message').empty();
+        
+        if (!append) {
+            $root.find('#stock-modal-results').empty();
+        }
+        
+        $.ajax({
+            url: stockImagesAjax.ajaxurl,
+            type: 'POST',
+            data: {
+                action: 'stock_images_search',
+                nonce: stockImagesAjax.nonce,
+                query: query,
+                page: page,
+                source: selectedSource
+            },
+            success: function(response) {
+                $root.find('#stock-modal-spinner').hide();
+                if (response.success && response.data.results && response.data.results.length) {
+                    renderModalResults($root, response.data.results, append);
+                    $root.data('stockTotalPages', response.data.total_pages || 1);
+                    $root.data('stockPage', page);
+                    
+                    if (page < (response.data.total_pages || 1)) {
+                        $root.find('#stock-modal-load-more-container').show();
+                    } else {
+                        $root.find('#stock-modal-load-more-container').hide();
+                    }
+                } else {
+                    if (!append) {
+                        $root.find('#stock-modal-results').html('<p>No images found.</p>');
+                    }
+                    $root.find('#stock-modal-load-more-container').hide();
+                }
+            },
+            error: function() {
+                $root.find('#stock-modal-spinner').hide();
+                $root.find('#stock-modal-message').html('<span style="color:red;">Error searching ' + selectedSource + '.</span>');
+                $root.find('#stock-modal-load-more-container').hide();
+            }
+        });
+    }
+
+    function renderModalResults($root, results, append) {
         var html = '';
         results.forEach(function(img) {
             html += StockImages.createImageCard(img);
         });
+        
         if (append) {
-            $root.find('#stock-unsplash-results').append(html);
+            $root.find('#stock-modal-results').append(html);
         } else {
-            $root.find('#stock-unsplash-results').html(html);
+            $root.find('#stock-modal-results').html(html);
         }
 
         // Import handler for new markup
@@ -785,7 +845,7 @@ jQuery(document).ready(function($) {
                 try {
                     imageData = JSON.parse(imageData);
                 } catch (err) {
-                    $root.find('#stock-unsplash-message').html('<span style="color:red;">Invalid image data.</span>');
+                    $root.find('#stock-modal-message').html('<span style="color:red;">Invalid image data.</span>');
                     return;
                 }
             }

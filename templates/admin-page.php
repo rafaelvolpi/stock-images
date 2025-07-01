@@ -15,10 +15,10 @@ $access_key = get_option('unsplash_access_key');
 <div class="wrap stock-images">
     <h1><?php _e('Stock Images', 'stock-images'); ?></h1>
     
-    <?php if (empty($access_key)): ?>
+    <?php if (empty($access_key) && empty(get_option('pexels_api_key'))): ?>
         <div class="notice notice-warning">
             <p>
-                <?php _e('Please configure your Unsplash API key in the', 'stock-images'); ?>
+                <?php _e('Please configure your Unsplash or Pexels API key in the', 'stock-images'); ?>
                 <a href="<?php echo admin_url('admin.php?page=stock-images-settings'); ?>">
                     <?php _e('settings page', 'stock-images'); ?>
                 </a>
@@ -48,17 +48,21 @@ $access_key = get_option('unsplash_access_key');
         <div class="stock-search-header">
             <h3><?php _e('Search Stock Images', 'stock-images'); ?></h3>
             <div class="stock-search-form-wrapper">
+                <select id="stock-source-select" class="stock-source-select">
+                    <option value="unsplash"><?php _e('Unsplash', 'stock-images'); ?></option>
+                    <option value="pexels"><?php _e('Pexels', 'stock-images'); ?></option>
+                </select>
                 <input 
                     type="text" 
                     id="stock-search-input" 
                     placeholder="<?php _e('Search for images...', 'stock-images'); ?>" 
                     class="stock-search-input"
-                    <?php echo empty($access_key) ? 'disabled' : ''; ?>
+                    <?php echo (empty($access_key) && empty(get_option('pexels_api_key'))) ? 'disabled' : ''; ?>
                 >
                 <button 
                     type="submit" 
                     class="button button-primary stock-search-btn"
-                    <?php echo empty($access_key) ? 'disabled' : ''; ?>
+                    <?php echo (empty($access_key) && empty(get_option('pexels_api_key'))) ? 'disabled' : ''; ?>
                 >
                     <?php _e('Search', 'stock-images'); ?>
                 </button>
