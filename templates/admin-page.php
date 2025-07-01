@@ -10,6 +10,23 @@ $plugin = StockImages::get_instance();
 // Get statistics
 $total_imported = $this->get_imported_count();
 $access_key = get_option('unsplash_access_key');
+$pexels_api_key = get_option('pexels_api_key');
+$pixabay_api_key = get_option('pixabay_api_key');
+
+// Check which APIs are configured
+$configured_apis = array();
+if (!empty($access_key)) {
+    $configured_apis['unsplash'] = __('Unsplash', 'stock-images');
+}
+if (!empty($pexels_api_key)) {
+    $configured_apis['pexels'] = __('Pexels', 'stock-images');
+}
+if (!empty($pixabay_api_key)) {
+    $configured_apis['pixabay'] = __('Pixabay', 'stock-images');
+}
+
+// If no APIs are configured, show all options but disabled
+$has_configured_apis = !empty($configured_apis);
 ?>
 
 <div class="wrap stock-images">
@@ -18,10 +35,10 @@ $access_key = get_option('unsplash_access_key');
         <?php _e('Settings', 'stock-images'); ?>
     </a>
     
-    <?php if (empty($access_key) && empty(get_option('pexels_api_key'))): ?>
+    <?php if (!$has_configured_apis): ?>
         <div class="notice notice-warning">
             <p>
-                <?php _e('Please configure your Unsplash or Pexels API key in the', 'stock-images'); ?>
+                <?php _e('Please configure at least one API key (Unsplash, Pexels, or Pixabay) in the', 'stock-images'); ?>
                 <a href="<?php echo admin_url('options-general.php?page=stock-images-settings'); ?>">
                     <?php _e('settings page', 'stock-images'); ?>
                 </a>
@@ -52,20 +69,27 @@ $access_key = get_option('unsplash_access_key');
             <h3><?php _e('Search Stock Images', 'stock-images'); ?></h3>
             <div class="stock-search-form-wrapper">
                 <select id="stock-source-select" class="stock-source-select">
-                    <option value="unsplash"><?php _e('Unsplash', 'stock-images'); ?></option>
-                    <option value="pexels"><?php _e('Pexels', 'stock-images'); ?></option>
+                    <?php if ($has_configured_apis): ?>
+                        <?php foreach ($configured_apis as $api => $name): ?>
+                            <option value="<?php echo $api; ?>"><?php echo $name; ?></option>
+                        <?php endforeach; ?>
+                    <?php else: ?>
+                        <option value="unsplash"><?php _e('Unsplash', 'stock-images'); ?></option>
+                        <option value="pexels"><?php _e('Pexels', 'stock-images'); ?></option>
+                        <option value="pixabay"><?php _e('Pixabay', 'stock-images'); ?></option>
+                    <?php endif; ?>
                 </select>
                 <input 
                     type="text" 
                     id="stock-search-input" 
                     placeholder="<?php _e('Search for images...', 'stock-images'); ?>" 
                     class="stock-search-input"
-                    <?php echo (empty($access_key) && empty(get_option('pexels_api_key'))) ? 'disabled' : ''; ?>
+                    <?php echo ($has_configured_apis) ? '' : 'disabled'; ?>
                 >
                 <button 
                     type="submit" 
                     class="button button-primary stock-search-btn"
-                    <?php echo (empty($access_key) && empty(get_option('pexels_api_key'))) ? 'disabled' : ''; ?>
+                    <?php echo ($has_configured_apis) ? '' : 'disabled'; ?>
                 >
                     <?php _e('Search', 'stock-images'); ?>
                 </button>
@@ -73,9 +97,9 @@ $access_key = get_option('unsplash_access_key');
         </div>
         
         <div id="stock-results" class="stock-results">
-            <?php if (empty($access_key)): ?>
+            <?php if (!$has_configured_apis): ?>
                 <div class="no-results">
-                    <p><?php _e('Please configure your API key to start searching.', 'stock-images'); ?></p>
+                    <p><?php _e('Please configure at least one API key to start searching.', 'stock-images'); ?></p>
                 </div>
             <?php else: ?>
                 <div class="no-results">
@@ -102,7 +126,7 @@ $access_key = get_option('unsplash_access_key');
         <h3><?php _e('How to Use', 'stock-images'); ?></h3>
         <div class="stock-help-content">
             <ol>
-                <li><?php _e('Choose your preferred image source (Unsplash or Pexels) from the dropdown menu.', 'stock-images'); ?></li>
+                <li><?php _e('Choose your preferred image source (Unsplash, Pexels, or Pixabay) from the dropdown menu.', 'stock-images'); ?></li>
                 <li><?php _e('Enter a search term in the search box above (e.g., "nature", "business", "food").', 'stock-images'); ?></li>
                 <li><?php _e('Browse through the results and click the size button (S, M, L) on any image you want to import.', 'stock-images'); ?></li>
                 <li><?php _e('The image will be downloaded and added to your WordPress Media Library with proper attribution.', 'stock-images'); ?></li>
@@ -127,8 +151,10 @@ $access_key = get_option('unsplash_access_key');
                 <p>
                     <?php _e('For more information about usage requirements, visit:', 'stock-images'); ?>
                     <a href="https://unsplash.com/license" target="_blank">https://unsplash.com/license</a>
-                    <?php _e('and', 'stock-images'); ?>
+                    <?php _e(',', 'stock-images'); ?>
                     <a href="https://www.pexels.com/license/" target="_blank">https://www.pexels.com/license/</a>
+                    <?php _e('and', 'stock-images'); ?>
+                    <a href="https://pixabay.com/service/license/" target="_blank">https://pixabay.com/service/license/</a>
                 </p>
             </div>
         </div>

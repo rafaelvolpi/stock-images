@@ -3,9 +3,9 @@
  * Plugin Name: Stock Images
  * Plugin URI: https://github.com/rafaelvolpi/stock-images
  * Description: Integrate stock photos directly into your WordPress Media Library. Search and import high-quality images from multiple sources.
- * Version: 1.0.0
- * Author: Rafael Volpi, Indietech Solutions
- * Author URI: https://indietechsolutions.com
+ * Version: 1.1.7
+ * Author: Rafael Volpi
+ * Author URI: https://rafaelvolpi.com.br
  * License: GPL v2 or later
  * License URI: https://www.gnu.org/licenses/gpl-2.0.html
  * Text Domain: stock-images
@@ -21,7 +21,7 @@ if (!defined('ABSPATH')) {
 }
 
 // Define plugin constants
-define('STOCK_IMAGES_VERSION', '1.0.0');
+define('STOCK_IMAGES_VERSION', '1.1.7');
 define('STOCK_IMAGES_PLUGIN_URL', plugin_dir_url(__FILE__));
 define('STOCK_IMAGES_PLUGIN_PATH', plugin_dir_path(__FILE__));
 define('STOCK_IMAGES_PLUGIN_BASENAME', plugin_basename(__FILE__));
@@ -63,6 +63,7 @@ class StockImages {
         register_setting('stock_images_options', 'unsplash_access_key');
         register_setting('stock_images_options', 'unsplash_secret_key');
         register_setting('stock_images_options', 'pexels_api_key');
+        register_setting('stock_images_options', 'pixabay_api_key');
         register_setting('stock_images_options', 'stock_images_max_size');
     }
     
@@ -86,6 +87,7 @@ class StockImages {
         wp_localize_script('stock-images', 'stockImagesAjax', array(
             'ajaxurl' => admin_url('admin-ajax.php'),
             'nonce' => wp_create_nonce('stock_images_nonce'),
+            'configured_apis' => $this->get_configured_apis_for_js(),
             'strings' => array(
                 'searching' => __('Searching...', 'stock-images'),
                 'no_results' => __('No images found.', 'stock-images'),
@@ -120,6 +122,7 @@ class StockImages {
         wp_localize_script('stock-images', 'stockImagesAjax', array(
             'ajaxurl' => admin_url('admin-ajax.php'),
             'nonce' => wp_create_nonce('stock_images_nonce'),
+            'configured_apis' => $this->get_configured_apis_for_js(),
             'strings' => array(
                 'searching' => __('Searching...', 'stock-images'),
                 'no_results' => __('No images found.', 'stock-images'),
@@ -154,6 +157,7 @@ class StockImages {
         wp_localize_script('stock-images', 'stockImagesAjax', array(
             'ajaxurl' => admin_url('admin-ajax.php'),
             'nonce' => wp_create_nonce('stock_images_nonce'),
+            'configured_apis' => $this->get_configured_apis_for_js(),
             'strings' => array(
                 'searching' => __('Searching...', 'stock-images'),
                 'no_results' => __('No images found.', 'stock-images'),
@@ -215,6 +219,8 @@ class StockImages {
             $this->search_unsplash($query, $page, $per_page);
         } elseif ($source === 'pexels') {
             $this->search_pexels($query, $page, $per_page);
+        } elseif ($source === 'pixabay') {
+            $this->search_pixabay($query, $page, $per_page);
         } else {
             wp_send_json_error(__('Invalid source specified.', 'stock-images'));
         }
@@ -316,6 +322,73 @@ class StockImages {
                 ),
                 'width' => $photo['width'] ?? 0,
                 'height' => $photo['height'] ?? 0
+            );
+            
+            $transformed_data['results'][] = $transformed_photo;
+        }
+        
+        wp_send_json_success($transformed_data);
+    }
+    
+    private function search_pixabay($query, $page, $per_page) {
+        $api_key = get_option('pixabay_api_key');
+        if (empty($api_key)) {
+            wp_send_json_error(__('Pixabay API key not configured.', 'stock-images'));
+        }
+        
+        $url = add_query_arg(array(
+            'key' => $api_key,
+            'q' => $query,
+            'page' => $page,
+            'per_page' => $per_page,
+            'image_type' => 'photo',
+            'safesearch' => 'true',
+            'order' => 'popular'
+        ), 'https://pixabay.com/api/');
+        
+        $response = wp_remote_get($url);
+        
+        if (is_wp_error($response)) {
+            wp_send_json_error($response->get_error_message());
+        }
+        
+        $body = wp_remote_retrieve_body($response);
+        $data = json_decode($body, true);
+        
+        if (empty($data) || !isset($data['hits'])) {
+            wp_send_json_error(__('Invalid response from Pixabay API.', 'stock-images'));
+        }
+        
+        // Transform Pixabay data to match Unsplash format for consistency
+        $transformed_data = array(
+            'results' => array(),
+            'total' => $data['totalHits'] ?? 0,
+            'total_pages' => ceil(($data['totalHits'] ?? 0) / $per_page)
+        );
+        
+        foreach ($data['hits'] as $hit) {
+            $transformed_photo = array(
+                'id' => $hit['id'],
+                'source' => 'pixabay',
+                'urls' => array(
+                    'small' => $hit['webformatURL'],
+                    'regular' => $hit['largeImageURL'],
+                    'full' => $hit['fullHDURL'] ?: $hit['largeImageURL'],
+                    'raw' => $hit['largeImageURL']
+                ),
+                'alt_description' => $hit['tags'] ?? '',
+                'description' => $hit['tags'] ?? '',
+                'user' => array(
+                    'name' => $hit['user'] ?? 'Unknown',
+                    'links' => array(
+                        'html' => 'https://pixabay.com/users/' . urlencode($hit['user'] ?? '') . '/'
+                    )
+                ),
+                'links' => array(
+                    'html' => $hit['pageURL'] ?? ''
+                ),
+                'width' => $hit['imageWidth'] ?? 0,
+                'height' => $hit['imageHeight'] ?? 0
             );
             
             $transformed_data['results'][] = $transformed_photo;
@@ -436,8 +509,26 @@ class StockImages {
         error_log('Stock Images Debug - File saved successfully to: ' . $file_path);
         
         // Prepare attachment data with source-specific attribution
-        $source_name = $source === 'pexels' ? 'Pexels' : 'Unsplash';
-        $source_url = $source === 'pexels' ? 'https://pexels.com' : 'https://unsplash.com';
+        $source_name = '';
+        $source_url = '';
+        switch ($source) {
+            case 'unsplash':
+                $source_name = 'Unsplash';
+                $source_url = 'https://unsplash.com';
+                break;
+            case 'pexels':
+                $source_name = 'Pexels';
+                $source_url = 'https://pexels.com';
+                break;
+            case 'pixabay':
+                $source_name = 'Pixabay';
+                $source_url = 'https://pixabay.com';
+                break;
+            default:
+                $source_name = ucfirst($source);
+                $source_url = 'https://' . $source . '.com';
+                break;
+        }
         
         $attachment = array(
             'post_mime_type' => 'image/jpeg',
@@ -534,6 +625,29 @@ class StockImages {
                     )
                 );
             }
+        } elseif ($stock_source === 'pixabay') {
+            $pixabay_id = get_post_meta($post->ID, '_pixabay_id', true);
+            $photographer = get_post_meta($post->ID, '_pixabay_photographer', true);
+            $photographer_url = get_post_meta($post->ID, '_pixabay_photographer_url', true);
+            $pixabay_url = get_post_meta($post->ID, '_pixabay_url', true);
+            
+            if ($pixabay_id) {
+                $form_fields['stock_info'] = array(
+                    'label' => __('Stock Image Info', 'stock-images'),
+                    'input' => 'html',
+                    'html' => sprintf(
+                        '<p><strong>%s:</strong> %s</p><p><strong>%s:</strong> <a href="%s" target="_blank">%s</a></p><p><strong>%s:</strong> <a href="%s" target="_blank">%s</a></p>',
+                        __('Photo ID', 'stock-images'),
+                        $pixabay_id,
+                        __('Photographer', 'stock-images'),
+                        $photographer_url,
+                        $photographer,
+                        __('Source Link', 'stock-images'),
+                        $pixabay_url,
+                        __('View on Pixabay', 'stock-images')
+                    )
+                );
+            }
         }
         
         return $form_fields;
@@ -621,7 +735,23 @@ class StockImages {
             $stock_source = $import->stock_source;
             $photographer = get_post_meta($import->ID, '_' . $stock_source . '_photographer', true);
             $photographer_url = get_post_meta($import->ID, '_' . $stock_source . '_photographer_url', true);
-            $source_name = $stock_source === 'pexels' ? 'Pexels' : 'Unsplash';
+            
+            // Get the correct source name based on the stock source
+            $source_name = '';
+            switch ($stock_source) {
+                case 'unsplash':
+                    $source_name = 'Unsplash';
+                    break;
+                case 'pexels':
+                    $source_name = 'Pexels';
+                    break;
+                case 'pixabay':
+                    $source_name = 'Pixabay';
+                    break;
+                default:
+                    $source_name = ucfirst($stock_source);
+                    break;
+            }
             
             echo '<div class="stock-recent-item">';
             if ($image_url) {
@@ -645,6 +775,39 @@ class StockImages {
             echo '</div>';
         }
         echo '</div>';
+    }
+    
+    /**
+     * Get configured APIs for JavaScript
+     */
+    public function get_configured_apis_for_js() {
+        $configured_apis = array();
+        
+        $unsplash_key = get_option('unsplash_access_key');
+        if (!empty($unsplash_key)) {
+            $configured_apis[] = array(
+                'value' => 'unsplash',
+                'label' => __('Unsplash', 'stock-images')
+            );
+        }
+        
+        $pexels_key = get_option('pexels_api_key');
+        if (!empty($pexels_key)) {
+            $configured_apis[] = array(
+                'value' => 'pexels',
+                'label' => __('Pexels', 'stock-images')
+            );
+        }
+        
+        $pixabay_key = get_option('pixabay_api_key');
+        if (!empty($pixabay_key)) {
+            $configured_apis[] = array(
+                'value' => 'pixabay',
+                'label' => __('Pixabay', 'stock-images')
+            );
+        }
+        
+        return $configured_apis;
     }
     
     public function ajax_get_stats() {

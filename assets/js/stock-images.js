@@ -12,7 +12,7 @@ jQuery(document).ready(function($) {
             try {
                 console.log('StockImages: Initializing...');
                 this.bindEvents();
-                this.initSearchInterface();
+                // this.initSearchInterface(); // Commented out to disable search on main Media Library page
                 this.initMediaModal();
                 console.log('StockImages: Initialization complete');
             } catch (error) {
@@ -99,12 +99,14 @@ jQuery(document).ready(function($) {
             });
         },
         
+        /*
         initSearchInterface: function() {
             // Add search interface to media library
             if ($('#wp-media-grid').length) {
                 this.addSearchInterface();
             }
         },
+        */
         
         initMediaModal: function() {
             var observer = null;
@@ -155,8 +157,7 @@ jQuery(document).ready(function($) {
                         <div class="media-panel-content">
                             <div class="stock-modal-search">
                                 <select id="stock-modal-source-select" class="stock-source-select">
-                                    <option value="unsplash">Unsplash</option>
-                                    <option value="pexels">Pexels</option>
+                                    ${this.getConfiguredApiOptions()}
                                 </select>
                                 <input type="text" id="stock-modal-search-input" placeholder="${stockImagesAjax.strings.search_placeholder || 'Search for images...'}" class="stock-search-input">
                                 <button type="button" id="stock-modal-search-btn" class="button button-primary">${stockImagesAjax.strings.search_button || 'Search'}</button>
@@ -172,6 +173,24 @@ jQuery(document).ready(function($) {
                 // Add to media modal content area
                 $('.media-frame-content').append(panelHtml);
             }
+        },
+        
+        getConfiguredApiOptions: function() {
+            // This will be populated by PHP via wp_localize_script
+            if (window.stockImagesAjax && window.stockImagesAjax.configured_apis) {
+                var options = '';
+                window.stockImagesAjax.configured_apis.forEach(function(api) {
+                    options += `<option value="${api.value}">${api.label}</option>`;
+                });
+                return options;
+            }
+            
+            // Fallback to all options if not provided
+            return `
+                <option value="unsplash">Unsplash</option>
+                <option value="pexels">Pexels</option>
+                <option value="pixabay">Pixabay</option>
+            `;
         },
         
         addMediaModalTab: function() {
@@ -268,9 +287,10 @@ jQuery(document).ready(function($) {
             if (this.isLoading) return;
             
             this.isLoading = true;
-            this.showLoading();
+            this.showLoading(append);
             
             var selectedSource = $('#stock-source-select').val() || 'unsplash';
+            var currentPage = this.currentPage; // Store reference to current page
             
             $.ajax({
                 url: stockImagesAjax.ajaxurl,
@@ -279,7 +299,7 @@ jQuery(document).ready(function($) {
                     action: 'stock_images_search',
                     nonce: stockImagesAjax.nonce,
                     query: this.currentQuery,
-                    page: this.currentPage,
+                    page: currentPage,
                     source: selectedSource
                 },
                 success: function(response) {
@@ -287,20 +307,20 @@ jQuery(document).ready(function($) {
                     StockImages.hideLoading();
                     
                     if (response.success && response.data.results && response.data.results.length) {
-                        StockImages.renderResults(response.data.results, this.currentPage === 1);
+                        StockImages.displayResults(response.data, append);
                         
-                        if (response.data.total_pages > this.currentPage) {
+                        if (response.data.total_pages > currentPage) {
                             $('#stock-load-more-container').show();
                         } else {
                             $('#stock-load-more-container').hide();
                         }
                     } else {
-                        if (this.currentPage === 1) {
+                        if (!append) {
                             $('#stock-results').html('<div class="no-results"><p>' + (stockImagesAjax.strings.no_results || 'No images found.') + '</p></div>');
                         }
                         $('#stock-load-more-container').hide();
                     }
-                }.bind(this),
+                },
                 error: function(xhr, status, error) {
                     StockImages.isLoading = false;
                     StockImages.hideLoading();
@@ -350,6 +370,7 @@ jQuery(document).ready(function($) {
         displayResults: function(data, append) {
             var resultsContainer = $('#stock-results');
             var html = '';
+            var currentPage = this.currentPage; // Store reference to current page
             
             if (!append) {
                 resultsContainer.empty();
@@ -366,8 +387,11 @@ jQuery(document).ready(function($) {
                     resultsContainer.html(html);
                 }
                 
+                // Bind import handlers for new images
+                StockImages.bindImportHandlers();
+                
                 // Show load more button if there are more pages
-                if (data.total_pages > this.currentPage) {
+                if (data.total_pages > currentPage) {
                     $('#stock-load-more-container').show();
                 } else {
                     $('#stock-load-more-container').hide();
@@ -383,6 +407,7 @@ jQuery(document).ready(function($) {
         displayModalResults: function(data, append) {
             var resultsContainer = $('#stock-modal-results');
             var html = '';
+            var currentPage = this.currentPage; // Store reference to current page
             
             if (!append) {
                 resultsContainer.empty();
@@ -399,8 +424,11 @@ jQuery(document).ready(function($) {
                     resultsContainer.html(html);
                 }
                 
+                // Bind import handlers for new images
+                StockImages.bindImportHandlers();
+                
                 // Show load more button if there are more pages
-                if (data.total_pages > this.currentPage) {
+                if (data.total_pages > currentPage) {
                     $('#stock-modal-load-more-container').show();
                 } else {
                     $('#stock-modal-load-more-container').hide();
@@ -416,9 +444,9 @@ jQuery(document).ready(function($) {
         createImageCard: function(image) {
             // Determine source-specific size descriptions
             var source = image.source || 'unsplash';
-            var smallSize = source === 'pexels' ? '350px' : '350px';
-            var mediumSize = source === 'pexels' ? '1200px' : '700px';
-            var fullSize = source === 'pexels' ? 'Original' : '1920px';
+            var smallSize = source === 'pexels' ? '350px' : source === 'pixabay' ? '640px' : '350px';
+            var mediumSize = source === 'pexels' ? '1200px' : source === 'pixabay' ? '1280px' : '700px';
+            var fullSize = source === 'pexels' ? 'Original' : source === 'pixabay' ? '1920px' : '1920px';
             
             // Properly encode the image data to handle quotes and special characters
             var encodedImageData = encodeURIComponent(JSON.stringify(image));
@@ -533,11 +561,13 @@ jQuery(document).ready(function($) {
             // Implementation depends on the specific WordPress version and media library structure
         },
         
-        showLoading: function() {
+        showLoading: function(append) {
             if (this.modalMode) {
                 $('#stock-modal-spinner').show();
             } else {
-                $('#stock-results').html('<div class="loading"><p>' + (stockImagesAjax.strings.searching || 'Searching...') + '</p></div>');
+                if (!append) {
+                    $('#stock-results').html('<div class="loading"><p>' + (stockImagesAjax.strings.searching || 'Searching...') + '</p></div>');
+                }
             }
         },
         
@@ -649,18 +679,7 @@ jQuery(document).ready(function($) {
             }
         },
         
-        renderResults: function(results, isInitial) {
-            var html = '';
-            results.forEach(function(image) {
-                html += StockImages.createImageCard(image);
-            });
-            
-            if (isInitial) {
-                $('#stock-results').html(html);
-            } else {
-                $('#stock-results').append(html);
-            }
-            
+        bindImportHandlers: function() {
             // Import handler for new markup
             $('.stock-import-btn').off('click').on('click', function(e) {
                 e.preventDefault();
@@ -758,74 +777,91 @@ jQuery(document).ready(function($) {
         $root.data('stockTotalPages', 1);
         $root.data('stockSource', 'unsplash');
 
+        // Get configured APIs
+        var configuredApis = window.stockImagesAjax && window.stockImagesAjax.configured_apis ? window.stockImagesAjax.configured_apis : [];
+        var hasConfiguredApis = configuredApis.length > 0;
+        
+        var sourceOptions = '';
+        if (hasConfiguredApis) {
+            configuredApis.forEach(function(api) {
+                sourceOptions += '<option value="' + api.value + '">' + api.label + '</option>';
+            });
+        } else {
+            sourceOptions = '<option value="unsplash">Unsplash</option><option value="pexels">Pexels</option><option value="pixabay">Pixabay</option>';
+        }
+
         var html = '' +
             '<div class="stock-modal-search">' +
-            '  <select id="stock-modal-source-select" class="stock-source-select">' +
-            '    <option value="unsplash">Unsplash</option>' +
-            '    <option value="pexels">Pexels</option>' +
+            '  <select id="stock-modal-source-select" class="stock-source-select"' + (hasConfiguredApis ? '' : ' disabled') + '>' +
+            sourceOptions +
             '  </select>' +
-            '  <input type="text" id="stock-modal-search-input" placeholder="Search for images..." class="stock-search-input">' +
-            '  <button type="submit" id="stock-modal-search-btn" class="button button-primary">Search</button>' +
+            '  <input type="text" id="stock-modal-search-input" placeholder="Search for images..." class="stock-search-input"' + (hasConfiguredApis ? '' : ' disabled') + '>' +
+            '  <button type="submit" id="stock-modal-search-btn" class="button button-primary"' + (hasConfiguredApis ? '' : ' disabled') + '>Search</button>' +
             '  <span id="stock-modal-spinner" style="display:none;margin-left:10px;">Searching...</span>' +
             '</div>' +
-            '<div id="stock-modal-results"></div>' +
+            '<div id="stock-modal-results">' +
+            (hasConfiguredApis ? '' : '<p>Please configure at least one API key in the settings to start searching.</p>') +
+            '</div>' +
             '<div id="stock-modal-load-more-container" class="stock-load-more-container" style="display:none;">' +
             '  <button id="stock-modal-load-more" class="button">Load More</button>' +
             '</div>' +
             '<div id="stock-modal-message" style="margin-top:10px;"></div>';
         $root.find('#stock-images-modal-root').html(html);
 
-        // Source selector change handler
-        $root.find('#stock-modal-source-select').on('change', function() {
-            var selectedSource = $(this).val();
-            $root.data('stockSource', selectedSource);
-            
-            // If there's an active query, trigger a new search
-            var currentQuery = $root.data('stockQuery');
-            if (currentQuery) {
-                $root.data('stockPage', 1);
-                performModalSearch($root, currentQuery, 1, false);
-            }
-        });
-
-        // Search handler
-        $root.find('#stock-modal-search-btn').on('click', function(e) {
-            e.preventDefault();
-            var query = $root.find('#stock-modal-search-input').val().trim();
-            if (!query) return;
-            
-            $root.data('stockQuery', query);
-            $root.data('stockPage', 1);
-            performModalSearch($root, query, 1, false);
-        });
-
-        // Search input with debounce
-        var searchTimeout;
-        $root.find('#stock-modal-search-input').on('input', function() {
-            clearTimeout(searchTimeout);
-            searchTimeout = setTimeout(function() {
-                var query = $root.find('#stock-modal-search-input').val().trim();
-                if (!query) {
-                    $root.find('#stock-modal-results').empty();
-                    $root.find('#stock-modal-load-more-container').hide();
-                    return;
+        // Only bind events if APIs are configured
+        if (hasConfiguredApis) {
+            // Source selector change handler
+            $root.find('#stock-modal-source-select').on('change', function() {
+                var selectedSource = $(this).val();
+                $root.data('stockSource', selectedSource);
+                
+                // If there's an active query, trigger a new search
+                var currentQuery = $root.data('stockQuery');
+                if (currentQuery) {
+                    $root.data('stockPage', 1);
+                    performModalSearch($root, currentQuery, 1, false);
                 }
+            });
+
+            // Search handler
+            $root.find('#stock-modal-search-btn').on('click', function(e) {
+                e.preventDefault();
+                var query = $root.find('#stock-modal-search-input').val().trim();
+                if (!query) return;
+                
                 $root.data('stockQuery', query);
                 $root.data('stockPage', 1);
                 performModalSearch($root, query, 1, false);
-            }, 500);
-        });
+            });
 
-        // Load More handler
-        $root.on('click', '#stock-modal-load-more', function(e) {
-            e.preventDefault();
-            var query = $root.data('stockQuery');
-            var page = $root.data('stockPage') + 1;
-            var totalPages = $root.data('stockTotalPages') || 1;
-            if (!query || page > totalPages) return;
-            
-            performModalSearch($root, query, page, true);
-        });
+            // Search input with debounce
+            var searchTimeout;
+            $root.find('#stock-modal-search-input').on('input', function() {
+                clearTimeout(searchTimeout);
+                searchTimeout = setTimeout(function() {
+                    var query = $root.find('#stock-modal-search-input').val().trim();
+                    if (!query) {
+                        $root.find('#stock-modal-results').empty();
+                        $root.find('#stock-modal-load-more-container').hide();
+                        return;
+                    }
+                    $root.data('stockQuery', query);
+                    $root.data('stockPage', 1);
+                    performModalSearch($root, query, 1, false);
+                }, 500);
+            });
+
+            // Load More handler
+            $root.on('click', '#stock-modal-load-more', function(e) {
+                e.preventDefault();
+                var query = $root.data('stockQuery');
+                var page = $root.data('stockPage') + 1;
+                var totalPages = $root.data('stockTotalPages') || 1;
+                if (!query || page > totalPages) return;
+                
+                performModalSearch($root, query, page, true);
+            });
+        }
     }
 
     function performModalSearch($root, query, page, append) {

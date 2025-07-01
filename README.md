@@ -1,10 +1,10 @@
 # Stock Images
 
-A WordPress plugin that integrates stock photos directly into your WordPress Media Library. Search and import high-quality images from Unsplash and Pexels with proper attribution.
+A WordPress plugin that integrates stock photos directly into your WordPress Media Library. Search and import high-quality images from Unsplash, Pexels, and Pixabay with proper attribution.
 
 ## Features
 
-- 🔍 **Search Stock Images**: Search through millions of high-quality photos from Unsplash and Pexels
+- 🔍 **Search Stock Images**: Search through millions of high-quality photos from Unsplash, Pexels, and Pixabay
 - 📥 **One-Click Import**: Import images directly into your WordPress Media Library
 - 📝 **Automatic Attribution**: Proper attribution is automatically added to imported images
 - 📊 **Statistics Dashboard**: Track your imports and usage statistics
@@ -13,6 +13,7 @@ A WordPress plugin that integrates stock photos directly into your WordPress Med
 - 🔒 **Secure**: Proper nonce verification and sanitization
 - 🌍 **Internationalization Ready**: Supports multiple languages
 - 🔌 **Extensible**: Built to support multiple stock image providers
+- ⚙️ **Smart Source Selection**: Only shows configured API sources in the dropdown menu
 
 ## Installation
 
@@ -58,12 +59,25 @@ A WordPress plugin that integrates stock photos directly into your WordPress Med
 5. Accept the terms and create your application
 6. Copy your API Key
 
+#### Pixabay API Key
+
+1. Go to [https://pixabay.com/api/docs/](https://pixabay.com/api/docs/)
+2. Sign in to your Pixabay account or create a new one
+3. Click "Get API Key" to register for API access
+4. Fill in the application details:
+   - **Application name**: Your website or blog name
+   - **Description**: Brief description of how you'll use stock images
+   - **Website URL**: Your website URL
+5. Accept the terms and create your account
+6. Copy your API Key
+
 ### Plugin Settings
 
 1. Go to **Settings > Stock Images** in your WordPress admin
 2. Enter your Unsplash API Access Key (optional but recommended)
 3. Enter your Pexels API Key (optional but recommended)
-4. Click "Save Settings"
+4. Enter your Pixabay API Key (optional but recommended)
+5. Click "Save Settings"
 
 **Note**: You can use either or both API keys. The plugin will work with whichever services you have configured.
 
@@ -72,11 +86,13 @@ A WordPress plugin that integrates stock photos directly into your WordPress Med
 ### Searching and Importing Images
 
 1. Go to **Media > Stock Images** in your WordPress admin
-2. Select your preferred image source (Unsplash or Pexels) from the dropdown
+2. Select your preferred image source from the dropdown (only configured APIs will be shown)
 3. Enter a search term in the search box
 4. Browse through the results
 5. Click the size button (S, M, L) on any image you want to import
 6. The image will be downloaded and added to your WordPress Media Library with proper attribution
+
+**Note**: The source selector dropdown will only show APIs that you have configured. If you haven't configured any API keys, you'll see a message prompting you to configure at least one API key in the settings.
 
 ### Using Imported Images
 
@@ -107,6 +123,11 @@ The plugin automatically adds attribution information to imported images. When y
 - **Free tier**: 200 requests per hour
 - **Paid plans**: Higher limits available
 
+### Pixabay API Limits
+
+- **Free tier**: 5,000 requests per hour
+- **No paid plans required**
+
 For production use, make sure to upgrade your applications in the respective developer dashboards.
 
 ## Usage Guidelines
@@ -117,7 +138,7 @@ When using stock images, you must provide proper attribution to the photographer
 
 ### Commercial Use
 
-Stock images from both Unsplash and Pexels are free to use for commercial and noncommercial purposes without permission from the photographer or the source platform.
+Stock images from Unsplash, Pexels, and Pixabay are free to use for commercial and noncommercial purposes without permission from the photographer or the source platform.
 
 ### Modifications
 
@@ -126,6 +147,7 @@ You can modify stock images to fit your needs, but you cannot sell them as stock
 For complete usage guidelines, visit:
 - [Unsplash License](https://unsplash.com/license)
 - [Pexels License](https://www.pexels.com/license/)
+- [Pixabay License](https://pixabay.com/service/license/)
 
 ## Requirements
 
@@ -249,6 +271,48 @@ This plugin is licensed under the GPL v2 or later.
 
 ## Changelog
 
+### Version 1.1.7
+- Disabled stock images search interface on main Media Library page (upload.php)
+- Stock images search now only available in post editor modal for cleaner interface
+- Improved user experience by reducing clutter on main Media Library page
+
+### Version 1.1.6
+- Fixed critical bug: showLoading method was clearing results during load more operations
+- Enhanced load more functionality to properly append new images
+- Improved user experience with consistent pagination behavior
+
+### Version 1.1.5
+- Fixed bug: Modal displayModalResults method now properly handles currentPage reference
+- Improved consistency between modal and admin page search functionality
+- Enhanced JavaScript scope handling for better reliability
+
+### Version 1.1.4
+- Fixed bug: Admin page (upload.php?page=stock-images) load more now works correctly
+- Improved currentPage reference handling in JavaScript
+- Enhanced consistency between modal and admin page search functionality
+
+### Version 1.1.3
+- Fixed bug: Load More functionality now properly appends new images instead of replacing existing ones
+- Improved import handler binding for dynamically loaded images
+- Enhanced user experience with proper pagination
+
+### Version 1.1.2
+- Fixed bug: Correct source names now display properly in recent imports (Unsplash, Pexels, Pixabay)
+- Added proper attribution support for Pixabay images in media library
+- Improved source name logic throughout the plugin
+
+### Version 1.1.1
+- Added smart source selection - only shows configured API sources in dropdown menus
+- Improved user experience by hiding unavailable options
+- Enhanced error handling for unconfigured APIs
+- Updated documentation and settings
+
+### Version 1.1.0
+- Added Pixabay API support
+- Enhanced image size handling for all three providers
+- Improved error handling and user feedback
+- Updated documentation and settings
+
 ### Version 1.0.0
 - Initial release
 - Search and import functionality
@@ -256,11 +320,11 @@ This plugin is licensed under the GPL v2 or later.
 - Statistics dashboard
 - Automatic attribution
 - Responsive design
-- Support for Unsplash API
+- Support for Unsplash and Pexels APIs
 
 ## Future Plans
 
-- Support for additional stock image providers (Pexels, Pixabay, etc.)
+- Support for additional stock image providers (Pixabay, etc.)
 - Advanced filtering options
 - Bulk import functionality
 - Custom attribution templates
