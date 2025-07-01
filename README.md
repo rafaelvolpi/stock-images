@@ -1,10 +1,10 @@
 # Stock Images
 
-A WordPress plugin that integrates stock photos directly into your WordPress Media Library. Search and import high-quality images from multiple sources with proper attribution.
+A WordPress plugin that integrates stock photos directly into your WordPress Media Library. Search and import high-quality images from Unsplash and Pexels with proper attribution.
 
 ## Features
 
-- 🔍 **Search Stock Images**: Search through millions of high-quality photos from multiple sources
+- 🔍 **Search Stock Images**: Search through millions of high-quality photos from Unsplash and Pexels
 - 📥 **One-Click Import**: Import images directly into your WordPress Media Library
 - 📝 **Automatic Attribution**: Proper attribution is automatically added to imported images
 - 📊 **Statistics Dashboard**: Track your imports and usage statistics
@@ -21,7 +21,7 @@ A WordPress plugin that integrates stock photos directly into your WordPress Med
 1. Download the plugin files
 2. Upload the `stock-images` folder to your `/wp-content/plugins/` directory
 3. Activate the plugin through the 'Plugins' menu in WordPress
-4. Go to 'Stock Images' > 'Settings' to configure your API keys
+4. Go to 'Settings > Stock Images' to configure your API keys
 
 ### Method 2: WordPress Admin
 
@@ -32,7 +32,9 @@ A WordPress plugin that integrates stock photos directly into your WordPress Med
 
 ## Configuration
 
-### Getting Your Unsplash API Key
+### Getting Your API Keys
+
+#### Unsplash API Key
 
 1. Go to [https://unsplash.com/developers](https://unsplash.com/developers)
 2. Sign in to your Unsplash account or create a new one
@@ -44,22 +46,37 @@ A WordPress plugin that integrates stock photos directly into your WordPress Med
 5. Accept the terms and create your application
 6. Copy your Access Key
 
+#### Pexels API Key
+
+1. Go to [https://www.pexels.com/api/](https://www.pexels.com/api/)
+2. Sign in to your Pexels account or create a new one
+3. Click "Get Started" to register your application
+4. Fill in the application details:
+   - **Application name**: Your website or blog name
+   - **Description**: Brief description of how you'll use stock images
+   - **Website URL**: Your website URL
+5. Accept the terms and create your application
+6. Copy your API Key
+
 ### Plugin Settings
 
 1. Go to **Settings > Stock Images** in your WordPress admin
-2. Enter your Unsplash API Access Key
-3. Optionally enter your Secret Key (not required for basic usage)
+2. Enter your Unsplash API Access Key (optional but recommended)
+3. Enter your Pexels API Key (optional but recommended)
 4. Click "Save Settings"
+
+**Note**: You can use either or both API keys. The plugin will work with whichever services you have configured.
 
 ## Usage
 
 ### Searching and Importing Images
 
 1. Go to **Media > Stock Images** in your WordPress admin
-2. Enter a search term in the search box
-3. Browse through the results
-4. Click "Import" on any image you want to add to your media library
-5. The image will be downloaded and added to your WordPress Media Library with proper attribution
+2. Select your preferred image source (Unsplash or Pexels) from the dropdown
+3. Enter a search term in the search box
+4. Browse through the results
+5. Click the size button (S, M, L) on any image you want to import
+6. The image will be downloaded and added to your WordPress Media Library with proper attribution
 
 ### Using Imported Images
 
@@ -80,12 +97,17 @@ The plugin automatically adds attribution information to imported images. When y
 
 ## API Rate Limits
 
-Unsplash API has the following rate limits:
+### Unsplash API Limits
 
 - **Demo applications**: 50 requests per hour
 - **Production applications**: 5,000 requests per hour
 
-For production use, make sure to upgrade your application in the Unsplash developer dashboard.
+### Pexels API Limits
+
+- **Free tier**: 200 requests per hour
+- **Paid plans**: Higher limits available
+
+For production use, make sure to upgrade your applications in the respective developer dashboards.
 
 ## Usage Guidelines
 
@@ -95,13 +117,15 @@ When using stock images, you must provide proper attribution to the photographer
 
 ### Commercial Use
 
-Stock images are free to use for commercial and noncommercial purposes without permission from the photographer or the source platform.
+Stock images from both Unsplash and Pexels are free to use for commercial and noncommercial purposes without permission from the photographer or the source platform.
 
 ### Modifications
 
 You can modify stock images to fit your needs, but you cannot sell them as stock photos.
 
-For complete usage guidelines, visit: [https://unsplash.com/license](https://unsplash.com/license)
+For complete usage guidelines, visit:
+- [Unsplash License](https://unsplash.com/license)
+- [Pexels License](https://www.pexels.com/license/)
 
 ## Requirements
 
