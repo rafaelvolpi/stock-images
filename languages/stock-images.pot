@@ -1,0 +1,313 @@
+# Copyright (C) 2024 Your Name
+# This file is distributed under the GPL v2 or later.
+msgid ""
+msgstr ""
+"Project-Id-Version: Unsplash Media Library 1.0.0\n"
+"Report-Msgid-Bugs-To: https://wordpress.org/support/plugin/unsplash-media-library\n"
+"POT-Creation-Date: 2024-01-01 12:00+0000\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"PO-Revision-Date: 2024-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language-Team: LANGUAGE <LL@li.org>\n"
+
+#: unsplash-media-library.php:89
+msgid "Searching..."
+msgstr ""
+
+#: unsplash-media-library.php:90
+msgid "No images found."
+msgstr ""
+
+#: unsplash-media-library.php:91
+msgid "Importing..."
+msgstr ""
+
+#: unsplash-media-library.php:92
+msgid "Image imported successfully!"
+msgstr ""
+
+#: unsplash-media-library.php:93
+msgid "An error occurred."
+msgstr ""
+
+#: unsplash-media-library.php:108
+msgid "Unsplash Media"
+msgstr ""
+
+#: unsplash-media-library.php:115
+msgid "Settings"
+msgstr ""
+
+#: unsplash-media-library.php:140
+msgid "You do not have permission to perform this action."
+msgstr ""
+
+#: unsplash-media-library.php:147
+msgid "Unsplash API key not configured."
+msgstr ""
+
+#: unsplash-media-library.php:165
+msgid "Invalid response from Unsplash API."
+msgstr ""
+
+#: templates/admin-page.php:16
+msgid "Please configure your Unsplash API key in the"
+msgstr ""
+
+#: templates/admin-page.php:18
+msgid "settings page"
+msgstr ""
+
+#: templates/admin-page.php:19
+msgid "to start using this plugin."
+msgstr ""
+
+#: templates/admin-page.php:30
+msgid "Images Imported"
+msgstr ""
+
+#: templates/admin-page.php:34
+msgid "This Month"
+msgstr ""
+
+#: templates/admin-page.php:38
+msgid "Total Downloads"
+msgstr ""
+
+#: templates/admin-page.php:44
+msgid "Search Unsplash Images"
+msgstr ""
+
+#: templates/admin-page.php:49
+msgid "Search for images..."
+msgstr ""
+
+#: templates/admin-page.php:52
+msgid "Search"
+msgstr ""
+
+#: templates/admin-page.php:58
+msgid "Please configure your Unsplash API key to start searching."
+msgstr ""
+
+#: templates/admin-page.php:61
+msgid "Enter a search term above to find images from Unsplash."
+msgstr ""
+
+#: templates/admin-page.php:66
+msgid "Load More"
+msgstr ""
+
+#: templates/admin-page.php:71
+msgid "Recent Imports"
+msgstr ""
+
+#: templates/admin-page.php:76
+msgid "How to Use"
+msgstr ""
+
+#: templates/admin-page.php:79
+msgid "Enter a search term in the search box above."
+msgstr ""
+
+#: templates/admin-page.php:80
+msgid "Browse through the results and click \"Import\" on any image you want to add to your media library."
+msgstr ""
+
+#: templates/admin-page.php:81
+msgid "The image will be downloaded and added to your WordPress media library with proper attribution."
+msgstr ""
+
+#: templates/admin-page.php:82
+msgid "You can then use the image in your posts and pages like any other media file."
+msgstr ""
+
+#: templates/admin-page.php:86
+msgid "Important: Attribution Requirements"
+msgstr ""
+
+#: templates/admin-page.php:88
+msgid "When using Unsplash images, you must provide proper attribution to the photographer. This plugin automatically adds attribution information to your media library entries."
+msgstr ""
+
+#: templates/admin-page.php:91
+msgid "For more information about Unsplash usage requirements, visit:"
+msgstr ""
+
+#: templates/settings-page.php:12
+msgid "Settings saved successfully!"
+msgstr ""
+
+#: templates/settings-page.php:20
+msgid "Unsplash Media Library Settings"
+msgstr ""
+
+#: templates/settings-page.php:23
+msgid "API Configuration"
+msgstr ""
+
+#: templates/settings-page.php:29
+msgid "Access Key"
+msgstr ""
+
+#: templates/settings-page.php:37
+msgid "Your Unsplash API Access Key. Get it from"
+msgstr ""
+
+#: templates/settings-page.php:44
+msgid "Secret Key"
+msgstr ""
+
+#: templates/settings-page.php:52
+msgid "Your Unsplash API Secret Key (optional for basic usage)."
+msgstr ""
+
+#: templates/settings-page.php:58
+msgid "Save Settings"
+msgstr ""
+
+#: templates/settings-page.php:63
+msgid "How to Get Your Unsplash API Keys"
+msgstr ""
+
+#: templates/settings-page.php:67
+msgid "Go to"
+msgstr ""
+
+#: templates/settings-page.php:70
+msgid "Sign in to your Unsplash account or create a new one."
+msgstr ""
+
+#: templates/settings-page.php:71
+msgid "Click \"New Application\" to register your application."
+msgstr ""
+
+#: templates/settings-page.php:72
+msgid "Fill in the application details:"
+msgstr ""
+
+#: templates/settings-page.php:74
+msgid "Application name:"
+msgstr ""
+
+#: templates/settings-page.php:74
+msgid "Your website or blog name"
+msgstr ""
+
+#: templates/settings-page.php:75
+msgid "Description:"
+msgstr ""
+
+#: templates/settings-page.php:75
+msgid "Brief description of how you'll use Unsplash images"
+msgstr ""
+
+#: templates/settings-page.php:76
+msgid "What are you building:"
+msgstr ""
+
+#: templates/settings-page.php:76
+msgid "WordPress website/blog"
+msgstr ""
+
+#: templates/settings-page.php:78
+msgid "Accept the terms and create your application."
+msgstr ""
+
+#: templates/settings-page.php:79
+msgid "Copy your Access Key and paste it in the field above."
+msgstr ""
+
+#: templates/settings-page.php:83
+msgid "Rate Limits"
+msgstr ""
+
+#: templates/settings-page.php:85
+msgid "Unsplash API has the following rate limits:"
+msgstr ""
+
+#: templates/settings-page.php:87
+msgid "Demo applications: 50 requests per hour"
+msgstr ""
+
+#: templates/settings-page.php:88
+msgid "Production applications: 5,000 requests per hour"
+msgstr ""
+
+#: templates/settings-page.php:90
+msgid "For production use, make sure to upgrade your application in the Unsplash developer dashboard."
+msgstr ""
+
+#: templates/settings-page.php:96
+msgid "Usage Guidelines"
+msgstr ""
+
+#: templates/settings-page.php:100
+msgid "Attribution Requirements"
+msgstr ""
+
+#: templates/settings-page.php:101
+msgid "When using Unsplash images, you must provide proper attribution to the photographer. This plugin automatically adds attribution information to your media library entries."
+msgstr ""
+
+#: templates/settings-page.php:105
+msgid "Commercial Use"
+msgstr ""
+
+#: templates/settings-page.php:106
+msgid "Unsplash images are free to use for commercial and noncommercial purposes without permission from the photographer or Unsplash."
+msgstr ""
+
+#: templates/settings-page.php:110
+msgid "Modifications"
+msgstr ""
+
+#: templates/settings-page.php:111
+msgid "You can modify Unsplash images to fit your needs, but you cannot sell them as stock photos."
+msgstr ""
+
+#: templates/settings-page.php:114
+msgid "For complete usage guidelines, visit:"
+msgstr ""
+
+#: unsplash-media-library.php:200
+msgid "Photo by"
+msgstr ""
+
+#: unsplash-media-library.php:200
+msgid "on"
+msgstr ""
+
+#: unsplash-media-library.php:200
+msgid "Unsplash"
+msgstr ""
+
+#: unsplash-media-library.php:220
+msgid "Unsplash Info"
+msgstr ""
+
+#: unsplash-media-library.php:225
+msgid "Photo ID"
+msgstr ""
+
+#: unsplash-media-library.php:227
+msgid "Photographer"
+msgstr ""
+
+#: unsplash-media-library.php:230
+msgid "Unsplash Link"
+msgstr ""
+
+#: unsplash-media-library.php:230
+msgid "View on Unsplash"
+msgstr ""
+
+#: unsplash-media-library.php:280
+msgid "No images imported yet."
+msgstr ""
+
+#: unsplash-media-library.php:295
+msgid "Photo by"
+msgstr "" 
