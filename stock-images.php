@@ -272,23 +272,40 @@ class StockImages {
         ));
         
         if (is_wp_error($response)) {
-            wp_send_json_error(__('Failed to connect to Unsplash API.', 'stock-images-by-indietech'));
+            wp_send_json_error(__('Failed to connect to Unsplash API: ', 'stock-images-by-indietech') . $response->get_error_message());
+        }
+        
+        $response_code = wp_remote_retrieve_response_code($response);
+        if ($response_code !== 200) {
+            $body = wp_remote_retrieve_body($response);
+            wp_send_json_error(__('Unsplash API error (HTTP ', 'stock-images-by-indietech') . $response_code . '): ' . $body);
         }
         
         $body = wp_remote_retrieve_body($response);
         $data = json_decode($body, true);
         
         if (empty($data) || !isset($data['results'])) {
-            wp_send_json_error(__('Invalid response from Unsplash API.', 'stock-images-by-indietech'));
+            wp_send_json_error(__('Invalid response from Unsplash API: ', 'stock-images-by-indietech') . $body);
         }
         
         $images = array();
         foreach ($data['results'] as $photo) {
             $images[] = array(
                 'id' => $photo['id'],
-                'url' => $photo['urls']['regular'],
+                'urls' => array(
+                    'small' => $photo['urls']['small'],
+                    'regular' => $photo['urls']['regular'],
+                    'full' => $photo['urls']['full']
+                ),
                 'thumb' => $photo['urls']['thumb'],
-                'alt' => $photo['alt_description'] ?? $photo['description'] ?? '',
+                'alt_description' => $photo['alt_description'] ?? $photo['description'] ?? '',
+                'description' => $photo['description'] ?? '',
+                'user' => array(
+                    'name' => $photo['user']['name'] ?? '',
+                    'links' => array(
+                        'html' => $photo['user']['links']['html'] ?? ''
+                    )
+                ),
                 'photographer' => $photo['user']['name'] ?? '',
                 'photographer_url' => $photo['user']['links']['html'] ?? '',
                 'download_url' => $photo['links']['download'] ?? '',
@@ -297,7 +314,7 @@ class StockImages {
         }
         
         wp_send_json_success(array(
-            'images' => $images,
+            'results' => $images,
             'total' => $data['total'] ?? 0,
             'total_pages' => $data['total_pages'] ?? 0
         ));
@@ -316,6 +333,7 @@ class StockImages {
             'per_page' => $per_page
         ), 'https://api.pexels.com/v1/search');
         
+        // Pexels API expects the API key directly as Authorization header
         $response = wp_remote_get($url, array(
             'timeout' => 15,
             'headers' => array(
@@ -324,23 +342,40 @@ class StockImages {
         ));
         
         if (is_wp_error($response)) {
-            wp_send_json_error(__('Failed to connect to Pexels API.', 'stock-images-by-indietech'));
+            wp_send_json_error(__('Failed to connect to Pexels API: ', 'stock-images-by-indietech') . $response->get_error_message());
+        }
+        
+        $response_code = wp_remote_retrieve_response_code($response);
+        if ($response_code !== 200) {
+            $body = wp_remote_retrieve_body($response);
+            wp_send_json_error(__('Pexels API error (HTTP ', 'stock-images-by-indietech') . $response_code . '): ' . $body);
         }
         
         $body = wp_remote_retrieve_body($response);
         $data = json_decode($body, true);
         
         if (empty($data) || !isset($data['photos'])) {
-            wp_send_json_error(__('Invalid response from Pexels API.', 'stock-images-by-indietech'));
+            wp_send_json_error(__('Invalid response from Pexels API: ', 'stock-images-by-indietech') . $body);
         }
         
         $images = array();
         foreach ($data['photos'] as $photo) {
             $images[] = array(
                 'id' => $photo['id'],
-                'url' => $photo['src']['large2x'],
+                'urls' => array(
+                    'small' => $photo['src']['small'],
+                    'regular' => $photo['src']['large2x'],
+                    'full' => $photo['src']['original']
+                ),
                 'thumb' => $photo['src']['medium'],
-                'alt' => $photo['alt'] ?? '',
+                'alt_description' => $photo['alt'] ?? '',
+                'description' => $photo['alt'] ?? '',
+                'user' => array(
+                    'name' => $photo['photographer'] ?? '',
+                    'links' => array(
+                        'html' => $photo['photographer_url'] ?? ''
+                    )
+                ),
                 'photographer' => $photo['photographer'] ?? '',
                 'photographer_url' => $photo['photographer_url'] ?? '',
                 'download_url' => $photo['url'] ?? '',
@@ -349,7 +384,7 @@ class StockImages {
         }
         
         wp_send_json_success(array(
-            'images' => $images,
+            'results' => $images,
             'total' => $data['total_results'] ?? 0,
             'total_pages' => ceil(($data['total_results'] ?? 0) / $per_page)
         ));
@@ -376,23 +411,40 @@ class StockImages {
         ));
         
         if (is_wp_error($response)) {
-            wp_send_json_error(__('Failed to connect to Pixabay API.', 'stock-images-by-indietech'));
+            wp_send_json_error(__('Failed to connect to Pixabay API: ', 'stock-images-by-indietech') . $response->get_error_message());
+        }
+        
+        $response_code = wp_remote_retrieve_response_code($response);
+        if ($response_code !== 200) {
+            $body = wp_remote_retrieve_body($response);
+            wp_send_json_error(__('Pixabay API error (HTTP ', 'stock-images-by-indietech') . $response_code . '): ' . $body);
         }
         
         $body = wp_remote_retrieve_body($response);
         $data = json_decode($body, true);
         
         if (empty($data) || !isset($data['hits'])) {
-            wp_send_json_error(__('Invalid response from Pixabay API.', 'stock-images-by-indietech'));
+            wp_send_json_error(__('Invalid response from Pixabay API: ', 'stock-images-by-indietech') . $body);
         }
         
         $images = array();
         foreach ($data['hits'] as $photo) {
             $images[] = array(
                 'id' => $photo['id'],
-                'url' => $photo['webformatURL'],
+                'urls' => array(
+                    'small' => $photo['previewURL'],
+                    'regular' => $photo['webformatURL'],
+                    'full' => $photo['largeImageURL']
+                ),
                 'thumb' => $photo['previewURL'],
-                'alt' => $photo['tags'] ?? '',
+                'alt_description' => $photo['tags'] ?? '',
+                'description' => $photo['tags'] ?? '',
+                'user' => array(
+                    'name' => $photo['user'] ?? '',
+                    'links' => array(
+                        'html' => $photo['pageURL'] ?? ''
+                    )
+                ),
                 'photographer' => $photo['user'] ?? '',
                 'photographer_url' => $photo['pageURL'] ?? '',
                 'download_url' => $photo['webformatURL'] ?? '',
@@ -401,7 +453,7 @@ class StockImages {
         }
         
         wp_send_json_success(array(
-            'images' => $images,
+            'results' => $images,
             'total' => $data['totalHits'] ?? 0,
             'total_pages' => ceil(($data['totalHits'] ?? 0) / $per_page)
         ));
@@ -425,7 +477,7 @@ class StockImages {
         }
         
         // Validate image_data structure
-        $required_fields = array('id', 'alt', 'photographer', 'photographer_url', 'source');
+        $required_fields = array('id', 'photographer', 'photographer_url', 'source');
         foreach ($required_fields as $field) {
             if (!isset($image_data[$field])) {
                 wp_send_json_error(__('Invalid image data structure.', 'stock-images-by-indietech'));
@@ -435,7 +487,7 @@ class StockImages {
         // Sanitize image_data
         $sanitized_data = array(
             'id' => sanitize_text_field($image_data['id']),
-            'alt' => sanitize_text_field($image_data['alt']),
+            'alt' => sanitize_text_field($image_data['alt_description'] ?? $image_data['alt'] ?? ''),
             'photographer' => sanitize_text_field($image_data['photographer']),
             'photographer_url' => esc_url_raw($image_data['photographer_url']),
             'source' => sanitize_text_field($image_data['source'])
@@ -446,50 +498,38 @@ class StockImages {
         
         // Determine the best image URL based on source and size
         $download_url = $image_url;
+        
+        // For now, let's use the original URL and let the APIs handle sizing
+        // This is more reliable than trying to manipulate URLs
         if ($sanitized_data['source'] === 'unsplash') {
-            if ($max_size === 'small') {
-                $download_url = str_replace('&w=1080', '&w=350', $image_url);
-            } elseif ($max_size === 'medium') {
-                $download_url = str_replace('&w=1080', '&w=700', $image_url);
-            } elseif ($max_size === 'full') {
-                $download_url = str_replace('&w=1080', '&w=1920', $image_url);
-            }
+            // Unsplash URLs already come with the correct size from the API
+            $download_url = $image_url;
         } elseif ($sanitized_data['source'] === 'pexels') {
-            if ($max_size === 'small') {
-                $download_url = str_replace('large2x', 'small', $image_url);
-            } elseif ($max_size === 'medium') {
-                $download_url = str_replace('large2x', 'large', $image_url);
-            } elseif ($max_size === 'full') {
-                // Keep original size for Pexels
-                $download_url = $image_url;
-            }
+            // Pexels URLs already come with the correct size from the API
+            $download_url = $image_url;
         } elseif ($sanitized_data['source'] === 'pixabay') {
-            if ($max_size === 'small') {
-                $download_url = str_replace('webformatURL', 'previewURL', $image_url);
-            } elseif ($max_size === 'medium') {
-                $download_url = str_replace('webformatURL', 'webformatURL', $image_url);
-            } elseif ($max_size === 'full') {
-                $download_url = str_replace('webformatURL', 'webformatURL', $image_url);
-            }
+            // Pixabay URLs already come with the correct size from the API
+            $download_url = $image_url;
         }
         
         // Download the image
         $response = wp_remote_get($download_url, array(
             'timeout' => 30,
-            'stream' => true
+            'user-agent' => 'WordPress/' . get_bloginfo('version') . '; ' . get_bloginfo('url')
         ));
         
         if (is_wp_error($response)) {
-            wp_send_json_error(__('Failed to download image.', 'stock-images-by-indietech'));
+            wp_send_json_error(__('Failed to download image: ', 'stock-images-by-indietech') . $response->get_error_message());
         }
         
         $response_code = wp_remote_retrieve_response_code($response);
         if ($response_code !== 200) {
-            wp_send_json_error(__('Failed to download image. HTTP error: ', 'stock-images-by-indietech') . $response_code);
+            $body = wp_remote_retrieve_body($response);
+            wp_send_json_error(__('Failed to download image. HTTP error: ', 'stock-images-by-indietech') . $response_code . ' - ' . $body);
         }
         
         $headers = wp_remote_retrieve_headers($response);
-        $content_type = $headers->get('content-type');
+        $content_type = wp_remote_retrieve_header($response, 'content-type');
         
         // Validate content type
         if (strpos($content_type, 'image/') !== 0) {
@@ -524,10 +564,26 @@ class StockImages {
         $file_path = $upload_dir['path'] . '/' . $filename;
         
         $file_content = wp_remote_retrieve_body($response);
+        
+        // Check if we actually got content
+        if (empty($file_content)) {
+            wp_send_json_error(__('Failed to retrieve image content. The response was empty.', 'stock-images-by-indietech'));
+        }
+        
+        // Check if content is reasonable size (at least 1KB for an image)
+        if (strlen($file_content) < 1024) {
+            wp_send_json_error(__('Image content is too small. Expected at least 1KB, got ', 'stock-images-by-indietech') . strlen($file_content) . ' bytes.');
+        }
+        
         $saved = file_put_contents($file_path, $file_content);
         
         if ($saved === false) {
             wp_send_json_error(__('Failed to save image to server.', 'stock-images-by-indietech'));
+        }
+        
+        // Verify the file was actually written and has content
+        if (!file_exists($file_path) || filesize($file_path) === 0) {
+            wp_send_json_error(__('File was not properly saved to server.', 'stock-images-by-indietech'));
         }
         
         // Prepare file array for wp_handle_sideload
@@ -545,11 +601,14 @@ class StockImages {
             wp_send_json_error(__('Error processing image: ', 'stock-images-by-indietech') . $file_info['error']);
         }
         
+        // Generate attribution text for caption (HTML with links)
+        $attribution_text = $this->generate_attribution_text($sanitized_data['photographer'], $sanitized_data['photographer_url'], $sanitized_data['source'], true);
+        
         // Prepare attachment data
         $attachment_data = array(
             'post_title' => $sanitized_data['alt'] ?: __('Stock Image', 'stock-images-by-indietech'),
-            'post_content' => '',
-            'post_excerpt' => '',
+            'post_content' => '', // Description field (empty)
+            'post_excerpt' => $attribution_text, // Caption field
             'post_status' => 'inherit',
             'post_mime_type' => $content_type
         );
@@ -565,6 +624,11 @@ class StockImages {
         require_once(ABSPATH . 'wp-admin/includes/image.php');
         $attachment_metadata = wp_generate_attachment_metadata($attachment_id, $file_info['file']);
         wp_update_attachment_metadata($attachment_id, $attachment_metadata);
+        
+        // Save alt text
+        if (!empty($sanitized_data['alt'])) {
+            update_post_meta($attachment_id, '_wp_attachment_image_alt', $sanitized_data['alt']);
+        }
         
         // Save stock image metadata
         update_post_meta($attachment_id, '_stk_img_its_source', $sanitized_data['source']);
@@ -642,8 +706,8 @@ class StockImages {
             </select>'
         );
         
-        // Add attribution preview
-        $attribution_text = $this->generate_attribution_text($photographer, $photographer_url, $source);
+        // Add attribution preview (HTML)
+        $attribution_text = $this->generate_attribution_text($photographer, $photographer_url, $source, true);
         $form_fields['stk_img_its_attribution_preview'] = array(
             'label' => __('Attribution Text', 'stock-images-by-indietech'),
             'input' => 'html',
@@ -667,27 +731,48 @@ class StockImages {
         return $post;
     }
     
-    private function generate_attribution_text($photographer, $photographer_url, $source) {
+    private function generate_attribution_text($photographer, $photographer_url, $source, $html = true) {
         $text = '';
         
         if ($source === 'unsplash') {
-            $text = sprintf(
-                __('Photo by %1$s on %2$s', 'stock-images-by-indietech'),
-                $photographer_url ? '<a href="' . esc_url($photographer_url) . '">' . esc_html($photographer) . '</a>' : esc_html($photographer),
-                '<a href="https://unsplash.com">Unsplash</a>'
-            );
+            if ($html) {
+                $text = sprintf(
+                    __('Photo by %1$s on %2$s', 'stock-images-by-indietech'),
+                    $photographer_url ? '<a href="' . esc_url($photographer_url) . '">' . esc_html($photographer) . '</a>' : esc_html($photographer),
+                    '<a href="https://unsplash.com">Unsplash</a>'
+                );
+            } else {
+                $text = sprintf(
+                    __('Photo by %s on Unsplash', 'stock-images-by-indietech'),
+                    $photographer
+                );
+            }
         } elseif ($source === 'pexels') {
-            $text = sprintf(
-                __('Photo by %1$s from %2$s', 'stock-images-by-indietech'),
-                $photographer_url ? '<a href="' . esc_url($photographer_url) . '">' . esc_html($photographer) . '</a>' : esc_html($photographer),
-                '<a href="https://www.pexels.com">Pexels</a>'
-            );
+            if ($html) {
+                $text = sprintf(
+                    __('Photo by %1$s from %2$s', 'stock-images-by-indietech'),
+                    $photographer_url ? '<a href="' . esc_url($photographer_url) . '">' . esc_html($photographer) . '</a>' : esc_html($photographer),
+                    '<a href="https://www.pexels.com">Pexels</a>'
+                );
+            } else {
+                $text = sprintf(
+                    __('Photo by %s from Pexels', 'stock-images-by-indietech'),
+                    $photographer
+                );
+            }
         } elseif ($source === 'pixabay') {
-            $text = sprintf(
-                __('Image by %1$s from %2$s', 'stock-images-by-indietech'),
-                $photographer_url ? '<a href="' . esc_url($photographer_url) . '">' . esc_html($photographer) . '</a>' : esc_html($photographer),
-                '<a href="https://pixabay.com">Pixabay</a>'
-            );
+            if ($html) {
+                $text = sprintf(
+                    __('Image by %1$s from %2$s', 'stock-images-by-indietech'),
+                    $photographer_url ? '<a href="' . esc_url($photographer_url) . '">' . esc_html($photographer) . '</a>' : esc_html($photographer),
+                    '<a href="https://pixabay.com">Pixabay</a>'
+                );
+            } else {
+                $text = sprintf(
+                    __('Image by %s from Pixabay', 'stock-images-by-indietech'),
+                    $photographer
+                );
+            }
         }
         
         return apply_filters('stk_img_its_attribution_text', $text, $photographer, $photographer_url, $source);
@@ -795,17 +880,26 @@ class StockImages {
         
         $unsplash_key = get_option('stk_img_its_unsplash_access_key');
         if (!empty($unsplash_key)) {
-            $configured_apis[] = 'unsplash';
+            $configured_apis[] = array(
+                'value' => 'unsplash',
+                'label' => __('Unsplash', 'stock-images-by-indietech')
+            );
         }
         
         $pexels_key = get_option('stk_img_its_pexels_api_key');
         if (!empty($pexels_key)) {
-            $configured_apis[] = 'pexels';
+            $configured_apis[] = array(
+                'value' => 'pexels',
+                'label' => __('Pexels', 'stock-images-by-indietech')
+            );
         }
         
         $pixabay_key = get_option('stk_img_its_pixabay_api_key');
         if (!empty($pixabay_key)) {
-            $configured_apis[] = 'pixabay';
+            $configured_apis[] = array(
+                'value' => 'pixabay',
+                'label' => __('Pixabay', 'stock-images-by-indietech')
+            );
         }
         
         return $configured_apis;

@@ -9,9 +9,9 @@ $plugin = StockImages::get_instance();
 
 // Get statistics
 $total_imported = $this->get_imported_count();
-$access_key = get_option('unsplash_access_key');
-$pexels_api_key = get_option('pexels_api_key');
-$pixabay_api_key = get_option('pixabay_api_key');
+$access_key = get_option('stk_img_its_unsplash_access_key');
+$pexels_api_key = get_option('stk_img_its_pexels_api_key');
+$pixabay_api_key = get_option('stk_img_its_pixabay_api_key');
 
 // Check which APIs are configured
 $configured_apis = array();

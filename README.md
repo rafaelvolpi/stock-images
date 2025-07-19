@@ -165,6 +165,8 @@ For complete usage guidelines, visit:
 
 ## Development
 
+For detailed development information, including hooks, filters, troubleshooting, and future plans, see [DEVELOPMENT.md](DEVELOPMENT.md).
+
 ### File Structure
 
 ```
@@ -179,38 +181,9 @@ stock-images/
 │   ├── admin-page.php
 │   └── settings-page.php
 ├── languages/                 # Translation files
-└── README.md
-```
-
-### Hooks and Filters
-
-The plugin provides several hooks for developers:
-
-#### Actions
-
-- `stock_images_image_imported` - Fired when an image is imported
-- `stock_images_before_search` - Fired before performing a search
-- `stock_images_after_search` - Fired after performing a search
-
-#### Filters
-
-- `stock_images_search_results` - Filter search results
-- `stock_images_image_data` - Filter image data before import
-- `stock_images_attribution_text` - Filter attribution text
-
-### Example Usage
-
-```php
-// Add custom action when image is imported
-add_action('stock_images_image_imported', function($attachment_id, $image_data) {
-    // Your custom code here
-    error_log('Stock image imported: ' . $attachment_id);
-}, 10, 2);
-
-// Filter attribution text
-add_filter('stock_images_attribution_text', function($text, $photographer, $photographer_url) {
-    return sprintf('Photo by <a href="%s">%s</a> on Stock Images', $photographer_url, $photographer);
-}, 10, 3);
+├── README.md                  # This file
+├── DEVELOPMENT.md             # Development documentation
+└── SUBMISSION.md              # WordPress.org submission guide
 ```
 
 ## Troubleshooting
@@ -329,6 +302,11 @@ This plugin is licensed under the GPL v2 or later.
 - Bulk import functionality
 - Custom attribution templates
 - Image optimization features
+
+## Additional Documentation
+
+- **[DEVELOPMENT.md](DEVELOPMENT.md)** - Development guide, troubleshooting, and future plans
+- **[SUBMISSION.md](SUBMISSION.md)** - WordPress.org submission guide and checklist
 
 ## Credits
 

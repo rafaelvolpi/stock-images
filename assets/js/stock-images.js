@@ -296,7 +296,7 @@ jQuery(document).ready(function($) {
                 url: stockImagesAjax.ajaxurl,
                 type: 'POST',
                 data: {
-                    action: 'stock_images_search',
+                    action: 'stk_img_its_search',
                     nonce: stockImagesAjax.nonce,
                     query: this.currentQuery,
                     page: currentPage,
@@ -342,7 +342,7 @@ jQuery(document).ready(function($) {
                 url: stockImagesAjax.ajaxurl,
                 type: 'POST',
                 data: {
-                    action: 'stock_images_search',
+                    action: 'stk_img_its_search',
                     nonce: stockImagesAjax.nonce,
                     query: this.currentQuery,
                     page: this.currentPage,
@@ -498,11 +498,20 @@ jQuery(document).ready(function($) {
                 button.css('position', 'relative');
             }
             
+            // Get the appropriate image URL based on selected size
+            var imageUrl = imageData.urls.regular; // Default to regular size
+            if (selectedSize === 'small' && imageData.urls.small) {
+                imageUrl = imageData.urls.small;
+            } else if (selectedSize === 'full' && imageData.urls.full) {
+                imageUrl = imageData.urls.full;
+            }
+            
             var ajaxData = {
-                action: 'stock_images_import',
+                action: 'stk_img_its_import',
                 nonce: stockImagesAjax.nonce,
+                image_url: imageUrl,
                 image_data: imageData,
-                size: selectedSize
+                selected_size: selectedSize
             };
             
             $.ajax({
@@ -676,7 +685,7 @@ jQuery(document).ready(function($) {
                     url: stockImagesAjax.ajaxurl,
                     type: 'POST',
                     data: {
-                        action: 'stock_images_get_stats',
+                        action: 'stk_img_its_get_stats',
                         nonce: stockImagesAjax.nonce
                     },
                     success: function(response) {
@@ -699,7 +708,7 @@ jQuery(document).ready(function($) {
                     url: stockImagesAjax.ajaxurl,
                     type: 'POST',
                     data: {
-                        action: 'stock_images_get_recent',
+                        action: 'stk_img_its_get_recent',
                         nonce: stockImagesAjax.nonce
                     },
                     success: function(response) {
@@ -752,14 +761,14 @@ jQuery(document).ready(function($) {
 
             this.states.add([
                 new State({
-                    id: "stock_images_tab",
+                    id: "stk_img_its_tab",
                     search: false,
                     title: "Stock Images"
                 })
             ]);
 
             // On render
-            this.on("content:render:stock_images_tab", this.renderStockImagesTabContent, this);
+            this.on("content:render:stk_img_its_tab", this.renderStockImagesTabContent, this);
         },
         browseRouter: function (routerView) {
             routerView.set({
@@ -771,7 +780,7 @@ jQuery(document).ready(function($) {
                     text: l10n.mediaLibraryTitle,
                     priority: 40
                 },
-                stock_images_tab: {
+                stk_img_its_tab: {
                     text: "Stock Images",
                     priority: 60
                 }
@@ -910,7 +919,7 @@ jQuery(document).ready(function($) {
             url: stockImagesAjax.ajaxurl,
             type: 'POST',
             data: {
-                action: 'stock_images_search',
+                action: 'stk_img_its_search',
                 nonce: stockImagesAjax.nonce,
                 query: query,
                 page: page,

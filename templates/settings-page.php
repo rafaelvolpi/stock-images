@@ -20,20 +20,20 @@ if (isset($_POST['submit'])) {
             $stock_images_max_size = 'medium';
         }
         
-        update_option('unsplash_access_key', $unsplash_access_key);
-        update_option('unsplash_secret_key', $unsplash_secret_key);
-        update_option('pexels_api_key', $pexels_api_key);
-        update_option('pixabay_api_key', $pixabay_api_key);
-        update_option('stock_images_max_size', $stock_images_max_size);
+        update_option('stk_img_its_unsplash_access_key', $unsplash_access_key);
+        update_option('stk_img_its_unsplash_secret_key', $unsplash_secret_key);
+        update_option('stk_img_its_pexels_api_key', $pexels_api_key);
+        update_option('stk_img_its_pixabay_api_key', $pixabay_api_key);
+        update_option('stk_img_its_max_size', $stock_images_max_size);
         echo '<div class="notice notice-success"><p>' . esc_html__('Settings saved successfully!', 'stock-images-by-indietech') . '</p></div>';
     }
 }
 
-$access_key = get_option('unsplash_access_key');
-$secret_key = get_option('unsplash_secret_key');
-$pexels_api_key = get_option('pexels_api_key');
-$pixabay_api_key = get_option('pixabay_api_key');
-$max_size = get_option('stock_images_max_size', 'medium'); // Default to medium size
+$access_key = get_option('stk_img_its_unsplash_access_key');
+$secret_key = get_option('stk_img_its_unsplash_secret_key');
+$pexels_api_key = get_option('stk_img_its_pexels_api_key');
+$pixabay_api_key = get_option('stk_img_its_pixabay_api_key');
+$max_size = get_option('stk_img_its_max_size', 'medium'); // Default to medium size
 ?>
 
 <div class="wrap">
