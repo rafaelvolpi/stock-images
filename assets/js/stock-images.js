@@ -489,7 +489,8 @@ jQuery(document).ready(function($) {
         },
         
         importImage: function(imageData, selectedSize) {
-            var button = $('.stock-import-btn[data-image*="' + imageData.id + '"]');
+            // Find the specific button that was clicked based on image ID and size
+            var button = $('.stock-import-btn[data-image*="' + imageData.id + '"][data-size="' + selectedSize + '"]');
             button.prop('disabled', true);
             // Add spinner overlay
             if (!button.find('.stock-import-spinner').length) {
@@ -510,6 +511,9 @@ jQuery(document).ready(function($) {
                 data: ajaxData,
                 success: function(response) {
                     if (response.success) {
+                        // Change only the clicked button to success state
+                        StockImages.changeButtonToSuccess(button);
+                        
                         StockImages.showSuccess(stockImagesAjax.strings.imported || 'Image imported successfully!');
                         
                         // If in modal mode, add to media library and close modal
@@ -536,10 +540,38 @@ jQuery(document).ready(function($) {
                     StockImages.showError('AJAX error: ' + error);
                 },
                 complete: function() {
-                    button.prop('disabled', false);
-                    button.find('.stock-import-spinner').remove();
+                    // Only re-enable button if there was an error (success case is handled above)
+                    if (!button.hasClass('stock-import-success')) {
+                        button.prop('disabled', false);
+                        button.find('.stock-import-spinner').remove();
+                    }
                 }
             });
+        },
+        
+        changeButtonToSuccess: function(button) {
+            // Remove spinner
+            button.find('.stock-import-spinner').remove();
+            
+            // Change button to success state
+            button.removeClass('stock-import-circle').addClass('stock-import-success');
+            button.prop('disabled', true);
+            
+            // Replace content with check icon
+            button.html('<svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41L9 16.17z" fill="#fff"/></svg>');
+            
+            // Add success animation
+            button.css({
+                'background': '#28a745',
+                'border-color': '#28a745',
+                'transform': 'scale(1.1)',
+                'transition': 'all 0.3s ease'
+            });
+            
+            // Reset scale after animation
+            setTimeout(function() {
+                button.css('transform', 'scale(1)');
+            }, 300);
         },
         
         addToMediaLibraryAndClose: function(data) {

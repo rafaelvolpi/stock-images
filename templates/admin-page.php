@@ -16,13 +16,13 @@ $pixabay_api_key = get_option('pixabay_api_key');
 // Check which APIs are configured
 $configured_apis = array();
 if (!empty($access_key)) {
-    $configured_apis['unsplash'] = __('Unsplash', 'stock-images');
+    $configured_apis['unsplash'] = esc_html__('Unsplash', 'stock-images-by-indietech');
 }
 if (!empty($pexels_api_key)) {
-    $configured_apis['pexels'] = __('Pexels', 'stock-images');
+    $configured_apis['pexels'] = esc_html__('Pexels', 'stock-images-by-indietech');
 }
 if (!empty($pixabay_api_key)) {
-    $configured_apis['pixabay'] = __('Pixabay', 'stock-images');
+    $configured_apis['pixabay'] = esc_html__('Pixabay', 'stock-images-by-indietech');
 }
 
 // If no APIs are configured, show all options but disabled
@@ -30,19 +30,19 @@ $has_configured_apis = !empty($configured_apis);
 ?>
 
 <div class="wrap stock-images">
-    <h1 class="wp-heading-inline"><?php _e('Stock Images', 'stock-images'); ?></h1>
-    <a href="<?php echo admin_url('options-general.php?page=stock-images-settings'); ?>" class="page-title-action">
-        <?php _e('Settings', 'stock-images'); ?>
+    <h1 class="wp-heading-inline"><?php esc_html_e('Stock Images', 'stock-images-by-indietech'); ?></h1>
+    <a href="<?php echo esc_url(admin_url('options-general.php?page=stock-images-settings')); ?>" class="page-title-action">
+        <?php esc_html_e('Settings', 'stock-images-by-indietech'); ?>
     </a>
     
     <?php if (!$has_configured_apis): ?>
         <div class="notice notice-warning">
             <p>
-                <?php _e('Please configure at least one API key (Unsplash, Pexels, or Pixabay) in the', 'stock-images'); ?>
-                <a href="<?php echo admin_url('options-general.php?page=stock-images-settings'); ?>">
-                    <?php _e('settings page', 'stock-images'); ?>
+                <?php esc_html_e('Please configure at least one API key (Unsplash, Pexels, or Pixabay) in the', 'stock-images-by-indietech'); ?>
+                <a href="<?php echo esc_url(admin_url('options-general.php?page=stock-images-settings')); ?>">
+                    <?php esc_html_e('settings page', 'stock-images-by-indietech'); ?>
                 </a>
-                <?php _e('to start using this plugin.', 'stock-images'); ?>
+                <?php esc_html_e('to start using this plugin.', 'stock-images-by-indietech'); ?>
             </p>
         </div>
     <?php endif; ?>
@@ -50,39 +50,39 @@ $has_configured_apis = !empty($configured_apis);
     <!-- Statistics -->
     <div class="stock-stats">
         <div class="stock-stat-card">
-            <div class="stock-stat-number" data-stat="total"><?php echo $total_imported; ?></div>
-            <div class="stock-stat-label"><?php _e('Images Imported', 'stock-images'); ?></div>
+            <div class="stock-stat-number" data-stat="total"><?php echo esc_html($total_imported); ?></div>
+            <div class="stock-stat-label"><?php esc_html_e('Images Imported', 'stock-images-by-indietech'); ?></div>
         </div>
         <div class="stock-stat-card">
-            <div class="stock-stat-number" data-stat="month"><?php echo $this->get_this_month_count(); ?></div>
-            <div class="stock-stat-label"><?php _e('This Month', 'stock-images'); ?></div>
+            <div class="stock-stat-number" data-stat="month"><?php echo esc_html($this->get_this_month_count()); ?></div>
+            <div class="stock-stat-label"><?php esc_html_e('This Month', 'stock-images-by-indietech'); ?></div>
         </div>
         <div class="stock-stat-card">
-            <div class="stock-stat-number" data-stat="downloads"><?php echo $this->get_total_downloads(); ?></div>
-            <div class="stock-stat-label"><?php _e('Total Downloads', 'stock-images'); ?></div>
+            <div class="stock-stat-number" data-stat="downloads"><?php echo esc_html($this->get_total_downloads()); ?></div>
+            <div class="stock-stat-label"><?php esc_html_e('Total Downloads', 'stock-images-by-indietech'); ?></div>
         </div>
     </div>
 
     <!-- Search Interface -->
     <div class="stock-search-container">
         <div class="stock-search-header">
-            <h3><?php _e('Search Stock Images', 'stock-images'); ?></h3>
+            <h3><?php esc_html_e('Search Stock Images', 'stock-images-by-indietech'); ?></h3>
             <div class="stock-search-form-wrapper">
                 <select id="stock-source-select" class="stock-source-select">
                     <?php if ($has_configured_apis): ?>
                         <?php foreach ($configured_apis as $api => $name): ?>
-                            <option value="<?php echo $api; ?>"><?php echo $name; ?></option>
+                            <option value="<?php echo esc_attr($api); ?>"><?php echo esc_html($name); ?></option>
                         <?php endforeach; ?>
                     <?php else: ?>
-                        <option value="unsplash"><?php _e('Unsplash', 'stock-images'); ?></option>
-                        <option value="pexels"><?php _e('Pexels', 'stock-images'); ?></option>
-                        <option value="pixabay"><?php _e('Pixabay', 'stock-images'); ?></option>
+                        <option value="unsplash"><?php esc_html_e('Unsplash', 'stock-images-by-indietech'); ?></option>
+                        <option value="pexels"><?php esc_html_e('Pexels', 'stock-images-by-indietech'); ?></option>
+                        <option value="pixabay"><?php esc_html_e('Pixabay', 'stock-images-by-indietech'); ?></option>
                     <?php endif; ?>
                 </select>
                 <input 
                     type="text" 
                     id="stock-search-input" 
-                    placeholder="<?php _e('Search for images...', 'stock-images'); ?>" 
+                    placeholder="<?php esc_attr_e('Search for images...', 'stock-images-by-indietech'); ?>" 
                     class="stock-search-input"
                     <?php echo ($has_configured_apis) ? '' : 'disabled'; ?>
                 >
@@ -91,7 +91,7 @@ $has_configured_apis = !empty($configured_apis);
                     class="button button-primary stock-search-btn"
                     <?php echo ($has_configured_apis) ? '' : 'disabled'; ?>
                 >
-                    <?php _e('Search', 'stock-images'); ?>
+                    <?php esc_html_e('Search', 'stock-images-by-indietech'); ?>
                 </button>
             </div>
         </div>
@@ -99,61 +99,61 @@ $has_configured_apis = !empty($configured_apis);
         <div id="stock-results" class="stock-results">
             <?php if (!$has_configured_apis): ?>
                 <div class="no-results">
-                    <p><?php _e('Please configure at least one API key to start searching.', 'stock-images'); ?></p>
+                    <p><?php esc_html_e('Please configure at least one API key to start searching.', 'stock-images-by-indietech'); ?></p>
                 </div>
             <?php else: ?>
                 <div class="no-results">
-                    <p><?php _e('Enter a search term above to find images.', 'stock-images'); ?></p>
+                    <p><?php esc_html_e('Enter a search term above to find images.', 'stock-images-by-indietech'); ?></p>
                 </div>
             <?php endif; ?>
         </div>
         
         <div id="stock-load-more-container" class="stock-load-more-container" style="display: none;">
             <button id="stock-load-more" class="button">
-                <?php _e('Load More', 'stock-images'); ?>
+                <?php esc_html_e('Load More', 'stock-images-by-indietech'); ?>
             </button>
         </div>
     </div>
     
     <!-- Recent Imports -->
     <div class="stock-recent-imports">
-        <h3><?php _e('Recent Imports', 'stock-images'); ?></h3>
+        <h3><?php esc_html_e('Recent Imports', 'stock-images-by-indietech'); ?></h3>
         <?php $this->display_recent_imports(); ?>
     </div>
     
     <!-- Help Section -->
     <div class="stock-help">
-        <h3><?php _e('How to Use', 'stock-images'); ?></h3>
+        <h3><?php esc_html_e('How to Use', 'stock-images-by-indietech'); ?></h3>
         <div class="stock-help-content">
             <ol>
-                <li><?php _e('Choose your preferred image source (Unsplash, Pexels, or Pixabay) from the dropdown menu.', 'stock-images'); ?></li>
-                <li><?php _e('Enter a search term in the search box above (e.g., "nature", "business", "food").', 'stock-images'); ?></li>
-                <li><?php _e('Browse through the results and click the size button (S, M, L) on any image you want to import.', 'stock-images'); ?></li>
-                <li><?php _e('The image will be downloaded and added to your WordPress Media Library with proper attribution.', 'stock-images'); ?></li>
-                <li><?php _e('Use the imported image in your posts, pages, or anywhere else in WordPress like any other media file.', 'stock-images'); ?></li>
+                <li><?php esc_html_e('Choose your preferred image source (Unsplash, Pexels, or Pixabay) from the dropdown menu.', 'stock-images-by-indietech'); ?></li>
+                <li><?php esc_html_e('Enter a search term in the search box above (e.g., "nature", "business", "food").', 'stock-images-by-indietech'); ?></li>
+                <li><?php esc_html_e('Browse through the results and click the size button (S, M, L) on any image you want to import.', 'stock-images-by-indietech'); ?></li>
+                <li><?php esc_html_e('The image will be downloaded and added to your WordPress Media Library with proper attribution.', 'stock-images-by-indietech'); ?></li>
+                <li><?php esc_html_e('Use the imported image in your posts, pages, or anywhere else in WordPress like any other media file.', 'stock-images-by-indietech'); ?></li>
             </ol>
             
             <div class="stock-usage-tips">
-                <h4><?php _e('Pro Tips', 'stock-images'); ?></h4>
+                <h4><?php esc_html_e('Pro Tips', 'stock-images-by-indietech'); ?></h4>
                 <ul>
-                    <li><?php _e('Use specific search terms for better results (e.g., "mountain sunset" instead of just "mountain").', 'stock-images'); ?></li>
-                    <li><?php _e('Choose the appropriate image size: Small (350px) for thumbnails, Medium (700px) for content, Large (1920px) for featured images.', 'stock-images'); ?></li>
-                    <li><?php _e('You can also access stock images directly from the Media Library by clicking "Add Media" in any post or page.', 'stock-images'); ?></li>
-                    <li><?php _e('All imported images include automatic attribution to comply with licensing requirements.', 'stock-images'); ?></li>
+                    <li><?php esc_html_e('Use specific search terms for better results (e.g., "mountain sunset" instead of just "mountain").', 'stock-images-by-indietech'); ?></li>
+                    <li><?php esc_html_e('Choose the appropriate image size: Small (350px) for thumbnails, Medium (700px) for content, Large (1920px) for featured images.', 'stock-images-by-indietech'); ?></li>
+                    <li><?php esc_html_e('You can also access stock images directly from the Media Library by clicking "Add Media" in any post or page.', 'stock-images-by-indietech'); ?></li>
+                    <li><?php esc_html_e('All imported images include automatic attribution to comply with licensing requirements.', 'stock-images-by-indietech'); ?></li>
                 </ul>
             </div>
             
             <div class="stock-attribution-notice">
-                <h4><?php _e('Important: Attribution Requirements', 'stock-images'); ?></h4>
+                <h4><?php esc_html_e('Important: Attribution Requirements', 'stock-images-by-indietech'); ?></h4>
                 <p>
-                    <?php _e('When using stock images, you must provide proper attribution to the photographer. This plugin automatically adds attribution information to your media library entries.', 'stock-images'); ?>
+                    <?php esc_html_e('When using stock images, you must provide proper attribution to the photographer. This plugin automatically adds attribution information to your media library entries.', 'stock-images-by-indietech'); ?>
                 </p>
                 <p>
-                    <?php _e('For more information about usage requirements, visit:', 'stock-images'); ?>
+                    <?php esc_html_e('For more information about usage requirements, visit:', 'stock-images-by-indietech'); ?>
                     <a href="https://unsplash.com/license" target="_blank">https://unsplash.com/license</a>
-                    <?php _e(',', 'stock-images'); ?>
+                    <?php esc_html_e(',', 'stock-images-by-indietech'); ?>
                     <a href="https://www.pexels.com/license/" target="_blank">https://www.pexels.com/license/</a>
-                    <?php _e('and', 'stock-images'); ?>
+                    <?php esc_html_e('and', 'stock-images-by-indietech'); ?>
                     <a href="https://pixabay.com/service/license/" target="_blank">https://pixabay.com/service/license/</a>
                 </p>
             </div>

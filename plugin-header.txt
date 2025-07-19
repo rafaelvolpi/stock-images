@@ -1,0 +1,37 @@
+Plugin Header Requirements for WordPress.org:
+
+Your main plugin file (stock-images.php) has been updated with the correct header format:
+
+<?php
+/**
+ * Plugin Name: Stock Images by Indietech
+ * Plugin URI: https://bitbucket.org/devteamits/stock-images
+ * Description: Integrate stock photos directly into your WordPress Media Library. Search and import high-quality images from multiple sources.
+ * Version: 1.1.7
+ * Author: Indietech Solutions
+ * Author URI: https://indietechsolutions.com
+ * License: GPL v2 or later
+ * License URI: https://www.gnu.org/licenses/gpl-2.0.html
+ * Text Domain: stock-images
+ * Domain Path: /languages
+ * Requires at least: 5.0
+ * Tested up to: 6.4
+ * Requires PHP: 7.4
+ */
+
+Required fields for WordPress.org:
+- Plugin Name: (required) ✅ Updated to "Stock Images by Indietech"
+- Plugin URI: (optional but recommended) ✅
+- Description: (required) ✅
+- Version: (required) ✅
+- Author: (required) ✅
+- Author URI: (optional) ✅
+- License: (required) ✅
+- License URI: (required) ✅
+- Text Domain: (required for internationalization) ✅
+- Domain Path: (required if using Text Domain) ✅
+- Requires at least: (recommended) ✅
+- Tested up to: (recommended) ✅
+- Requires PHP: (recommended) ✅
+
+Your plugin header is now updated and ready for submission! 
