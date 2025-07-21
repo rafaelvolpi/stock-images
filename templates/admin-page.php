@@ -5,7 +5,7 @@ if (!defined('ABSPATH')) {
 }
 
 // Get plugin instance
-$plugin = StockImages::get_instance();
+$plugin = StockImagesByITS::get_instance();
 
 // Get statistics
 $total_imported = $this->get_imported_count();

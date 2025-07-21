@@ -28,7 +28,7 @@ define('STK_IMG_ITS_PLUGIN_PATH', plugin_dir_path(__FILE__));
 define('STK_IMG_ITS_PLUGIN_BASENAME', plugin_basename(__FILE__));
 
 // Main plugin class
-class StockImages {
+class StockImagesByITS {
     
     private static $instance = null;
     
@@ -974,7 +974,7 @@ class StockImages {
 
 // Initialize the plugin
 function stk_img_its_init() {
-    StockImages::get_instance();
+    StockImagesByITS::get_instance();
 }
 
 // Hook into WordPress

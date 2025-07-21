@@ -12,19 +12,19 @@ if (isset($_POST['submit'])) {
         $unsplash_secret_key = isset($_POST['unsplash_secret_key']) ? sanitize_text_field(wp_unslash($_POST['unsplash_secret_key'])) : '';
         $pexels_api_key = isset($_POST['pexels_api_key']) ? sanitize_text_field(wp_unslash($_POST['pexels_api_key'])) : '';
         $pixabay_api_key = isset($_POST['pixabay_api_key']) ? sanitize_text_field(wp_unslash($_POST['pixabay_api_key'])) : '';
-        $stock_images_max_size = isset($_POST['stock_images_max_size']) ? sanitize_text_field(wp_unslash($_POST['stock_images_max_size'])) : 'medium';
+        $stk_img_its_max_size = isset($_POST['stk_img_its_max_size']) ? sanitize_text_field(wp_unslash($_POST['stk_img_its_max_size'])) : 'medium';
         
         // VALIDATE
         $allowed_sizes = array('small', 'medium', 'full');
-        if (!in_array($stock_images_max_size, $allowed_sizes, true)) {
-            $stock_images_max_size = 'medium';
+        if (!in_array($stk_img_its_max_size, $allowed_sizes, true)) {
+            $stk_img_its_max_size = 'medium';
         }
         
         update_option('stk_img_its_unsplash_access_key', $unsplash_access_key);
         update_option('stk_img_its_unsplash_secret_key', $unsplash_secret_key);
         update_option('stk_img_its_pexels_api_key', $pexels_api_key);
         update_option('stk_img_its_pixabay_api_key', $pixabay_api_key);
-        update_option('stk_img_its_max_size', $stock_images_max_size);
+        update_option('stk_img_its_max_size', $stk_img_its_max_size);
         echo '<div class="notice notice-success"><p>' . esc_html__('Settings saved successfully!', 'stock-images-by-indietech') . '</p></div>';
     }
 }
@@ -131,10 +131,10 @@ $max_size = get_option('stk_img_its_max_size', 'medium'); // Default to medium s
             <table class="form-table">
                 <tr>
                     <th scope="row">
-                        <label for="stock_images_max_size"><?php esc_html_e('Maximum Image Size', 'stock-images-by-indietech'); ?></label>
+                        <label for="stk_img_its_max_size"><?php esc_html_e('Maximum Image Size', 'stock-images-by-indietech'); ?></label>
                     </th>
                     <td>
-                        <select id="stock_images_max_size" name="stock_images_max_size" class="stock-api-key-input">
+                        <select id="stk_img_its_max_size" name="stk_img_its_max_size" class="stock-api-key-input">
                             <option value="small" <?php selected($max_size, 'small'); ?>><?php esc_html_e('Small (350px width - Unsplash, 350px width - Pexels, 640px width - Pixabay)', 'stock-images-by-indietech'); ?></option>
                             <option value="medium" <?php selected($max_size, 'medium'); ?>><?php esc_html_e('Medium (700px width - Unsplash, 1200px width - Pexels, 1280px width - Pixabay)', 'stock-images-by-indietech'); ?></option>
                             <option value="full" <?php selected($max_size, 'full'); ?>><?php esc_html_e('Full (1920px width - Unsplash, Original size - Pexels, 1920px width - Pixabay)', 'stock-images-by-indietech'); ?></option>
