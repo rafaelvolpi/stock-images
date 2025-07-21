@@ -1,6 +1,6 @@
 {
   "name": "stock-images-plugin",
-  "version": "1.1.10",
+  "version": "1.2.0",
   "description": "WordPress Stock Images Plugin - Search and import stock photos directly into your Media Library",
   "main": "index.js",
   "dependencies": {

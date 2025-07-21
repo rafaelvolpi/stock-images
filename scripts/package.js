@@ -274,8 +274,8 @@ try {
         console.log('🗑️  Removed existing zip file');
     }
     
-    // Create zip using system zip command
-    const zipCommand = `cd ${outputDir} && zip -r ../${finalZipName} .`;
+    // Create zip using system zip command, excluding hidden files
+    const zipCommand = `cd ${outputDir} && zip -r ../${finalZipName} . -x ".*" "*/.*"`;
     execSync(zipCommand, { stdio: 'inherit' });
     
     console.log(`✅ Successfully created: ${finalZipName}`);

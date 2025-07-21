@@ -4,6 +4,14 @@ if (!defined('ABSPATH')) {
     exit;
 }
 
+// Check if network settings are configured
+$plugin = StockImagesByITS::get_instance();
+$network_configured = $plugin->is_network_configured();
+
+if ($network_configured) {
+    echo '<div class="notice notice-info"><p>' . esc_html__('Network settings are configured and will be used. You can override these settings below for this site only.', 'stock-images-by-indietech') . '</p></div>';
+}
+
 // Handle form submission
 if (isset($_POST['submit'])) {
     if (isset($_POST['stock_settings_nonce']) && wp_verify_nonce(sanitize_text_field(wp_unslash($_POST['stock_settings_nonce'])), 'stock_settings')) {
@@ -60,7 +68,7 @@ $max_size = get_option('stk_img_its_max_size', 'medium'); // Default to medium s
                             name="unsplash_access_key" 
                             value="<?php echo esc_attr($access_key); ?>" 
                             class="stock-api-key-input"
-                            required
+                            <?php echo $network_configured ? 'placeholder="' . esc_attr__('Leave empty to use network settings', 'stock-images-by-indietech') . '"' : 'required'; ?>
                         >
                         <p class="stock-help-text">
                             <?php esc_html_e('Your Unsplash API Access Key. Get it from', 'stock-images-by-indietech'); ?>

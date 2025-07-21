@@ -6,12 +6,9 @@ if (!defined('ABSPATH')) {
 
 // Get plugin instance
 $plugin = StockImagesByITS::get_instance();
-
-// Get statistics
-$total_imported = $this->get_imported_count();
-$access_key = get_option('stk_img_its_unsplash_access_key');
-$pexels_api_key = get_option('stk_img_its_pexels_api_key');
-$pixabay_api_key = get_option('stk_img_its_pixabay_api_key');
+$access_key = $plugin->get_option_value('stk_img_its_unsplash_access_key');
+$pexels_api_key = $plugin->get_option_value('stk_img_its_pexels_api_key');
+$pixabay_api_key = $plugin->get_option_value('stk_img_its_pixabay_api_key');
 
 // Check which APIs are configured
 $configured_apis = array();
@@ -27,21 +24,45 @@ if (!empty($pixabay_api_key)) {
 
 // If no APIs are configured, show all options but disabled
 $has_configured_apis = !empty($configured_apis);
+
+// Determine settings page URL and check permissions
+$settings_url = '';
+$can_access_settings = false;
+
+if (is_multisite() && $plugin->is_network_configured()) {
+    // Network settings
+    if (current_user_can('manage_network_options')) {
+        $settings_url = network_admin_url('settings.php?page=stock-images-network-settings');
+        $can_access_settings = true;
+    }
+} else {
+    // Site settings
+    if (current_user_can('manage_options')) {
+        $settings_url = admin_url('options-general.php?page=stock-images-settings');
+        $can_access_settings = true;
+    }
+}
 ?>
 
 <div class="wrap stock-images">
     <h1 class="wp-heading-inline"><?php esc_html_e('Stock Images', 'stock-images-by-indietech'); ?></h1>
-    <a href="<?php echo esc_url(admin_url('options-general.php?page=stock-images-settings')); ?>" class="page-title-action">
-        <?php esc_html_e('Settings', 'stock-images-by-indietech'); ?>
-    </a>
+    <?php if ($can_access_settings && !empty($settings_url)): ?>
+        <a href="<?php echo esc_url($settings_url); ?>" class="page-title-action">
+            <?php esc_html_e('Settings', 'stock-images-by-indietech'); ?>
+        </a>
+    <?php endif; ?>
     
     <?php if (!$has_configured_apis): ?>
         <div class="notice notice-warning">
             <p>
                 <?php esc_html_e('Please configure at least one API key (Unsplash, Pexels, or Pixabay) in the', 'stock-images-by-indietech'); ?>
-                <a href="<?php echo esc_url(admin_url('options-general.php?page=stock-images-settings')); ?>">
+                <?php if ($can_access_settings && !empty($settings_url)): ?>
+                    <a href="<?php echo esc_url($settings_url); ?>">
+                        <?php esc_html_e('settings page', 'stock-images-by-indietech'); ?>
+                    </a>
+                <?php else: ?>
                     <?php esc_html_e('settings page', 'stock-images-by-indietech'); ?>
-                </a>
+                <?php endif; ?>
                 <?php esc_html_e('to start using this plugin.', 'stock-images-by-indietech'); ?>
             </p>
         </div>
@@ -50,16 +71,12 @@ $has_configured_apis = !empty($configured_apis);
     <!-- Statistics -->
     <div class="stock-stats">
         <div class="stock-stat-card">
-            <div class="stock-stat-number" data-stat="total"><?php echo esc_html($total_imported); ?></div>
+            <div class="stock-stat-number" data-stat="total"><?php echo esc_html($this->get_imported_count()); ?></div>
             <div class="stock-stat-label"><?php esc_html_e('Images Imported', 'stock-images-by-indietech'); ?></div>
         </div>
         <div class="stock-stat-card">
             <div class="stock-stat-number" data-stat="month"><?php echo esc_html($this->get_this_month_count()); ?></div>
             <div class="stock-stat-label"><?php esc_html_e('This Month', 'stock-images-by-indietech'); ?></div>
-        </div>
-        <div class="stock-stat-card">
-            <div class="stock-stat-number" data-stat="downloads"><?php echo esc_html($this->get_total_downloads()); ?></div>
-            <div class="stock-stat-label"><?php esc_html_e('Total Downloads', 'stock-images-by-indietech'); ?></div>
         </div>
     </div>
 

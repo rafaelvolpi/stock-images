@@ -3,7 +3,7 @@
  * Plugin Name: Stock Images by Indietech
  * Plugin URI: https://github.com/rafaelvolpi/stock-images
  * Description: Integrate stock photos directly into your WordPress Media Library. Search and import high-quality images from multiple sources.
- * Version: 1.1.10
+ * Version: 1.2.0
  * Author: Indietech
  * Author URI: https://indietechsolutions.com
  * License: GPL v2 or later
@@ -22,7 +22,7 @@ if (!defined('ABSPATH')) {
 }
 
 // Define plugin constants
-define('STK_IMG_ITS_VERSION', '1.1.10');
+define('STK_IMG_ITS_VERSION', '1.2.0');
 define('STK_IMG_ITS_PLUGIN_URL', plugin_dir_url(__FILE__));
 define('STK_IMG_ITS_PLUGIN_PATH', plugin_dir_path(__FILE__));
 define('STK_IMG_ITS_PLUGIN_BASENAME', plugin_basename(__FILE__));
@@ -42,6 +42,7 @@ class StockImagesByITS {
     private function __construct() {
         add_action('init', array($this, 'init'));
         add_action('admin_init', array($this, 'admin_init'));
+        add_action('network_admin_init', array($this, 'network_admin_init')); // Add this line
         add_action('wp_ajax_stk_img_its_search', array($this, 'ajax_search'));
         add_action('wp_ajax_stk_img_its_import', array($this, 'ajax_import'));
         add_action('wp_ajax_stk_img_its_get_stats', array($this, 'ajax_get_stats'));
@@ -50,6 +51,7 @@ class StockImagesByITS {
         add_action('enqueue_block_editor_assets', array($this, 'enqueue_block_editor_assets'));
         add_action('enqueue_block_assets', array($this, 'enqueue_block_assets'));
         add_action('admin_menu', array($this, 'add_admin_menu'));
+        add_action('network_admin_menu', array($this, 'add_network_admin_menu')); // Add this line
         add_action('add_attachment', array($this, 'add_stock_attribution'));
         add_filter('attachment_fields_to_edit', array($this, 'add_stock_fields'), 10, 2);
         add_filter('attachment_fields_to_save', array($this, 'save_stock_fields'), 10, 2);
@@ -61,7 +63,19 @@ class StockImagesByITS {
     }
     
     public function admin_init() {
-        // Register settings
+        // Only register settings for single site or if network settings are not configured
+        if (!is_multisite() || !$this->is_network_configured()) {
+            $this->register_site_settings();
+        }
+    }
+    
+    public function network_admin_init() {
+        // Register network settings
+        $this->register_network_settings();
+    }
+    
+    private function register_site_settings() {
+        // Register settings for single site
         register_setting('stk_img_its_options', 'stk_img_its_unsplash_access_key', array(
             'sanitize_callback' => 'sanitize_text_field'
         ));
@@ -75,6 +89,25 @@ class StockImagesByITS {
             'sanitize_callback' => 'sanitize_text_field'
         ));
         register_setting('stk_img_its_options', 'stk_img_its_max_size', array(
+            'sanitize_callback' => 'sanitize_text_field'
+        ));
+    }
+    
+    private function register_network_settings() {
+        // Register network settings
+        register_setting('stk_img_its_network_options', 'stk_img_its_unsplash_access_key', array(
+            'sanitize_callback' => 'sanitize_text_field'
+        ));
+        register_setting('stk_img_its_network_options', 'stk_img_its_unsplash_secret_key', array(
+            'sanitize_callback' => 'sanitize_text_field'
+        ));
+        register_setting('stk_img_its_network_options', 'stk_img_its_pexels_api_key', array(
+            'sanitize_callback' => 'sanitize_text_field'
+        ));
+        register_setting('stk_img_its_network_options', 'stk_img_its_pixabay_api_key', array(
+            'sanitize_callback' => 'sanitize_text_field'
+        ));
+        register_setting('stk_img_its_network_options', 'stk_img_its_max_size', array(
             'sanitize_callback' => 'sanitize_text_field'
         ));
     }
@@ -196,14 +229,28 @@ class StockImagesByITS {
             array($this, 'admin_page')
         );
         
-        // Add Settings as a submenu under Settings
+        // Only add site settings if not multisite or if network settings are not configured
+        if (!is_multisite() || !$this->is_network_configured()) {
+            add_submenu_page(
+                'options-general.php', // Parent: Settings
+                __('Stock Images Settings', 'stock-images-by-indietech'),
+                __('Stock Images', 'stock-images-by-indietech'),
+                'manage_options',
+                'stock-images-settings',
+                array($this, 'settings_page')
+            );
+        }
+    }
+    
+    public function add_network_admin_menu() {
+        // Add network settings page
         add_submenu_page(
-            'options-general.php', // Parent: Settings
+            'settings.php', // Parent: Network Settings
             __('Stock Images Settings', 'stock-images-by-indietech'),
             __('Stock Images', 'stock-images-by-indietech'),
-            'manage_options',
-            'stock-images-settings',
-            array($this, 'settings_page')
+            'manage_network_options',
+            'stock-images-network-settings',
+            array($this, 'network_settings_page')
         );
     }
     
@@ -215,6 +262,47 @@ class StockImagesByITS {
         include STK_IMG_ITS_PLUGIN_PATH . 'templates/settings-page.php';
     }
     
+    public function network_settings_page() {
+        include STK_IMG_ITS_PLUGIN_PATH . 'templates/network-settings-page.php';
+    }
+    
+    // Helper method to get option value (checks network first, then site)
+    private function get_option_value($option_name, $default = '') {
+        if (is_multisite()) {
+            // Check network option first
+            $network_value = get_site_option($option_name);
+            if ($network_value !== false && $network_value !== '') {
+                return $network_value;
+            }
+        }
+        
+        // Fall back to site option
+        return get_option($option_name, $default);
+    }
+    
+    // Helper method to check if network is configured
+    public function is_network_configured() {
+        if (!is_multisite()) {
+            return false;
+        }
+        
+        $network_configured = false;
+        $api_keys = array(
+            'stk_img_its_unsplash_access_key',
+            'stk_img_its_pexels_api_key',
+            'stk_img_its_pixabay_api_key'
+        );
+        
+        foreach ($api_keys as $key) {
+            if (get_site_option($key)) {
+                $network_configured = true;
+                break;
+            }
+        }
+        
+        return $network_configured;
+    }
+
     public function ajax_search() {
         check_ajax_referer('stk_img_its_nonce', 'nonce');
         
@@ -251,7 +339,7 @@ class StockImagesByITS {
     }
     
     private function search_unsplash($query, $page, $per_page) {
-        $access_key = get_option('stk_img_its_unsplash_access_key');
+        $access_key = $this->get_option_value('stk_img_its_unsplash_access_key');
         
         if (empty($access_key)) {
             wp_send_json_error(__('Unsplash API key not configured.', 'stock-images-by-indietech'));
@@ -321,7 +409,7 @@ class StockImagesByITS {
     }
     
     private function search_pexels($query, $page, $per_page) {
-        $api_key = get_option('stk_img_its_pexels_api_key');
+        $api_key = $this->get_option_value('stk_img_its_pexels_api_key');
         
         if (empty($api_key)) {
             wp_send_json_error(__('Pexels API key not configured.', 'stock-images-by-indietech'));
@@ -391,7 +479,7 @@ class StockImagesByITS {
     }
     
     private function search_pixabay($query, $page, $per_page) {
-        $api_key = get_option('stk_img_its_pixabay_api_key');
+        $api_key = $this->get_option_value('stk_img_its_pixabay_api_key');
         
         if (empty($api_key)) {
             wp_send_json_error(__('Pixabay API key not configured.', 'stock-images-by-indietech'));
@@ -524,7 +612,7 @@ class StockImagesByITS {
         );
         
         // Get the appropriate image URL based on selected size
-        $max_size = !empty($selected_size) ? $selected_size : get_option('stk_img_its_max_size', 'medium');
+        $max_size = !empty($selected_size) ? $selected_size : $this->get_option_value('stk_img_its_max_size', 'medium');
         
         // Determine the best image URL based on source and size
         $download_url = $image_url;
@@ -861,10 +949,7 @@ class StockImagesByITS {
         return intval($count);
     }
     
-    public function get_total_downloads() {
-        // This would require tracking downloads, which is not implemented yet
-        return 0;
-    }
+
     
     public function display_recent_imports() {
         $cache_key = 'stk_img_its_recent_imports';
@@ -912,33 +997,24 @@ class StockImagesByITS {
     }
     
     public function get_configured_apis_for_js() {
-        $configured_apis = array();
+        $apis = array();
         
-        $unsplash_key = get_option('stk_img_its_unsplash_access_key');
+        $unsplash_key = $this->get_option_value('stk_img_its_unsplash_access_key');
         if (!empty($unsplash_key)) {
-            $configured_apis[] = array(
-                'value' => 'unsplash',
-                'label' => __('Unsplash', 'stock-images-by-indietech')
-            );
+            $apis[] = 'unsplash';
         }
         
-        $pexels_key = get_option('stk_img_its_pexels_api_key');
+        $pexels_key = $this->get_option_value('stk_img_its_pexels_api_key');
         if (!empty($pexels_key)) {
-            $configured_apis[] = array(
-                'value' => 'pexels',
-                'label' => __('Pexels', 'stock-images-by-indietech')
-            );
+            $apis[] = 'pexels';
         }
         
-        $pixabay_key = get_option('stk_img_its_pixabay_api_key');
+        $pixabay_key = $this->get_option_value('stk_img_its_pixabay_api_key');
         if (!empty($pixabay_key)) {
-            $configured_apis[] = array(
-                'value' => 'pixabay',
-                'label' => __('Pixabay', 'stock-images-by-indietech')
-            );
+            $apis[] = 'pixabay';
         }
         
-        return $configured_apis;
+        return $apis;
     }
     
     public function ajax_get_stats() {
@@ -950,8 +1026,7 @@ class StockImagesByITS {
         
         $stats = array(
             'total_imported' => $this->get_imported_count(),
-            'this_month' => $this->get_this_month_count(),
-            'total_downloads' => $this->get_total_downloads()
+            'this_month' => $this->get_this_month_count()
         );
         
         wp_send_json_success($stats);
