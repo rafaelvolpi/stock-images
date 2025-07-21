@@ -3,14 +3,14 @@
  * Plugin Name: Stock Images by Indietech
  * Plugin URI: https://github.com/rafaelvolpi/stock-images
  * Description: Integrate stock photos directly into your WordPress Media Library. Search and import high-quality images from multiple sources.
- * Version: 1.1.7
+ * Version: 1.1.10
  * Author: Indietech
  * Author URI: https://indietechsolutions.com
  * License: GPL v2 or later
  * License URI: https://www.gnu.org/licenses/gpl-2.0.html
  * Text Domain: stock-images-by-indietech
  * Domain Path: /languages
- * Requires at least: 5.0
+ * Requires at least: 6.0
  * Tested up to: 6.4
  * Requires PHP: 7.4
  */
@@ -22,7 +22,7 @@ if (!defined('ABSPATH')) {
 }
 
 // Define plugin constants
-define('STK_IMG_ITS_VERSION', '1.1.7');
+define('STK_IMG_ITS_VERSION', '1.1.10');
 define('STK_IMG_ITS_PLUGIN_URL', plugin_dir_url(__FILE__));
 define('STK_IMG_ITS_PLUGIN_PATH', plugin_dir_path(__FILE__));
 define('STK_IMG_ITS_PLUGIN_BASENAME', plugin_basename(__FILE__));
@@ -468,7 +468,31 @@ class StockImages {
         
         // SANITIZE EARLY
         $image_url = isset($_POST['image_url']) ? esc_url_raw(wp_unslash($_POST['image_url'])) : '';
-        $image_data = isset($_POST['image_data']) ? wp_unslash($_POST['image_data']) : array();
+        $image_data = array();
+        if (!empty($_POST['image_data'])) {
+            // phpcs:disable WordPress.Security.ValidatedSanitizedInput.InputNotSanitized
+            $raw_image_data = wp_unslash($_POST['image_data']);
+            // phpcs:enable WordPress.Security.ValidatedSanitizedInput.InputNotSanitized
+            if (is_array($raw_image_data)) {
+                // Define which fields need which sanitization
+                $text_fields = array('id', 'alt_description', 'alt', 'photographer', 'source');
+                $url_fields = array('photographer_url');
+                
+                // Sanitize text fields
+                foreach ($text_fields as $field) {
+                    if (isset($raw_image_data[$field])) {
+                        $image_data[$field] = sanitize_text_field($raw_image_data[$field]);
+                    }
+                }
+                
+                // Sanitize URL fields
+                foreach ($url_fields as $field) {
+                    if (isset($raw_image_data[$field])) {
+                        $image_data[$field] = esc_url_raw($raw_image_data[$field]);
+                    }
+                }
+            }
+        }
         $selected_size = isset($_POST['selected_size']) ? sanitize_text_field(wp_unslash($_POST['selected_size'])) : '';
         
         // VALIDATE
@@ -476,12 +500,18 @@ class StockImages {
             wp_send_json_error(__('Invalid image data provided.', 'stock-images-by-indietech'));
         }
         
-        // Validate image_data structure
+        // Validate that required fields are present and not empty
         $required_fields = array('id', 'photographer', 'photographer_url', 'source');
         foreach ($required_fields as $field) {
-            if (!isset($image_data[$field])) {
-                wp_send_json_error(__('Invalid image data structure.', 'stock-images-by-indietech'));
+            if (empty($image_data[$field])) {
+                wp_send_json_error(__('Missing required field: ', 'stock-images-by-indietech') . $field);
             }
+        }
+        
+        // Validate source is one of the allowed values
+        $allowed_sources = array('unsplash', 'pexels', 'pixabay');
+        if (!in_array($image_data['source'], $allowed_sources, true)) {
+            wp_send_json_error(__('Invalid source specified.', 'stock-images-by-indietech'));
         }
         
         // Sanitize image_data
@@ -737,12 +767,14 @@ class StockImages {
         if ($source === 'unsplash') {
             if ($html) {
                 $text = sprintf(
+                    // translators: %1$s is the photographer name (with link if available), %2$s is the Unsplash link
                     __('Photo by %1$s on %2$s', 'stock-images-by-indietech'),
                     $photographer_url ? '<a href="' . esc_url($photographer_url) . '">' . esc_html($photographer) . '</a>' : esc_html($photographer),
                     '<a href="https://unsplash.com">Unsplash</a>'
                 );
             } else {
                 $text = sprintf(
+                    // translators: %s is the photographer name
                     __('Photo by %s on Unsplash', 'stock-images-by-indietech'),
                     $photographer
                 );
@@ -750,12 +782,14 @@ class StockImages {
         } elseif ($source === 'pexels') {
             if ($html) {
                 $text = sprintf(
+                    // translators: %1$s is the photographer name (with link if available), %2$s is the Pexels link
                     __('Photo by %1$s from %2$s', 'stock-images-by-indietech'),
                     $photographer_url ? '<a href="' . esc_url($photographer_url) . '">' . esc_html($photographer) . '</a>' : esc_html($photographer),
                     '<a href="https://www.pexels.com">Pexels</a>'
                 );
             } else {
                 $text = sprintf(
+                    // translators: %s is the photographer name
                     __('Photo by %s from Pexels', 'stock-images-by-indietech'),
                     $photographer
                 );
@@ -763,12 +797,14 @@ class StockImages {
         } elseif ($source === 'pixabay') {
             if ($html) {
                 $text = sprintf(
+                    // translators: %1$s is the photographer name (with link if available), %2$s is the Pixabay link
                     __('Image by %1$s from %2$s', 'stock-images-by-indietech'),
                     $photographer_url ? '<a href="' . esc_url($photographer_url) . '">' . esc_html($photographer) . '</a>' : esc_html($photographer),
                     '<a href="https://pixabay.com">Pixabay</a>'
                 );
             } else {
                 $text = sprintf(
+                    // translators: %s is the photographer name
                     __('Image by %s from Pixabay', 'stock-images-by-indietech'),
                     $photographer
                 );
@@ -784,13 +820,13 @@ class StockImages {
         
         if ($count === false) {
             global $wpdb;
-            
+            // phpcs:disable WordPress.DB.DirectDatabaseQuery.DirectQuery
             $count = $wpdb->get_var($wpdb->prepare(
                 "SELECT COUNT(*) FROM {$wpdb->postmeta} 
                 WHERE meta_key = %s",
                 '_stk_img_its_source'
             ));
-            
+            // phpcs:enable WordPress.DB.DirectDatabaseQuery.DirectQuery
             wp_cache_set($cache_key, $count, 'stk_img_its', HOUR_IN_SECONDS);
         }
         
@@ -806,7 +842,7 @@ class StockImages {
             
             $start_date = gmdate('Y-m-01 00:00:00');
             $end_date = gmdate('Y-m-t 23:59:59');
-            
+            // phpcs:disable WordPress.DB.DirectDatabaseQuery.DirectQuery
             $count = $wpdb->get_var($wpdb->prepare(
                 "SELECT COUNT(*) FROM {$wpdb->postmeta} pm
                 JOIN {$wpdb->posts} p ON pm.post_id = p.ID
@@ -818,7 +854,7 @@ class StockImages {
                 $start_date,
                 $end_date
             ));
-            
+            // phpcs:enable WordPress.DB.DirectDatabaseQuery.DirectQuery
             wp_cache_set($cache_key, $count, 'stk_img_its', HOUR_IN_SECONDS);
         }
         
@@ -836,7 +872,7 @@ class StockImages {
         
         if ($recent_imports === false) {
             global $wpdb;
-            
+            // phpcs:disable WordPress.DB.DirectDatabaseQuery.DirectQuery
             $recent_imports = $wpdb->get_results($wpdb->prepare(
                 "SELECT p.ID, p.post_title, p.post_date, pm.meta_value as source
                 FROM {$wpdb->posts} p
@@ -847,7 +883,7 @@ class StockImages {
                 LIMIT 10",
                 '_stk_img_its_source'
             ));
-            
+            // phpcs:enable WordPress.DB.DirectDatabaseQuery.DirectQuery
             wp_cache_set($cache_key, $recent_imports, 'stk_img_its', 30 * MINUTE_IN_SECONDS);
         }
         
@@ -858,13 +894,13 @@ class StockImages {
         
         echo '<div class="stk-img-its-recent-imports">';
         foreach ($recent_imports as $import) {
-            $thumbnail = wp_get_attachment_image_src($import->ID, 'thumbnail');
-            $thumbnail_url = $thumbnail ? $thumbnail[0] : '';
-            
             echo '<div class="stk-img-its-recent-item">';
-            if ($thumbnail_url) {
-                echo '<img src="' . esc_url($thumbnail_url) . '" alt="' . esc_attr($import->post_title) . '" class="stk-img-its-recent-thumb" />';
-            }
+            echo wp_get_attachment_image(
+                $import->ID, 
+                'thumbnail', 
+                false, 
+                array('class' => 'stk-img-its-recent-thumb')
+            );
             echo '<div class="stk-img-its-recent-info">';
             echo '<h4>' . esc_html($import->post_title) . '</h4>';
             echo '<p class="stk-img-its-recent-source">' . esc_html(ucfirst($import->source)) . '</p>';

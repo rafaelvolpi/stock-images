@@ -1,6 +1,6 @@
 {
   "name": "stock-images-plugin",
-  "version": "1.1.7",
+  "version": "1.1.10",
   "description": "WordPress Stock Images Plugin - Search and import stock photos directly into your Media Library",
   "main": "index.js",
   "dependencies": {
@@ -35,8 +35,16 @@
     "version:major": "node scripts/package.js --version major",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
-  "keywords": ["wordpress", "plugin", "stock-images", "media-library", "unsplash", "pexels", "pixabay"],
+  "keywords": [
+    "wordpress",
+    "plugin",
+    "stock-images",
+    "media-library",
+    "unsplash",
+    "pexels",
+    "pixabay"
+  ],
   "author": "Indietech",
   "license": "GPL-2.0-or-later",
   "type": "commonjs"
-} 
+}

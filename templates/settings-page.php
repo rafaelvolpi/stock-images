@@ -38,7 +38,7 @@ $max_size = get_option('stk_img_its_max_size', 'medium'); // Default to medium s
 
 <div class="wrap">
     <h1 class="wp-heading-inline"><?php esc_html_e('Stock Images Settings', 'stock-images-by-indietech'); ?></h1>
-    <a href="<?php echo esc_url(admin_url('upload.php?page=stock-images')); ?>" class="page-title-action">
+    <a href="<?php echo esc_url(admin_url('upload.php?page=stock-images-by-indietech')); ?>" class="page-title-action">
         <?php esc_html_e('Back to Stock Images', 'stock-images-by-indietech'); ?>
     </a>
     

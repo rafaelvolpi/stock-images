@@ -29,10 +29,10 @@ function updateVersionInFile(filePath, oldVersion, newVersion) {
             updated = true;
         }
         
-        // Update STOCK_IMAGES_VERSION constant
-        const constantRegex = /define\('STOCK_IMAGES_VERSION',\s*'([^']+)'\);/;
+        // Update STK_IMG_ITS_VERSION constant (correct constant name)
+        const constantRegex = /define\('STK_IMG_ITS_VERSION',\s*'([^']+)'\);/;
         if (constantRegex.test(content)) {
-            content = content.replace(constantRegex, `define('STOCK_IMAGES_VERSION', '${newVersion}');`);
+            content = content.replace(constantRegex, `define('STK_IMG_ITS_VERSION', '${newVersion}');`);
             updated = true;
         }
     }
@@ -69,7 +69,7 @@ function updateAllVersions(newVersion) {
     console.log(`🔄 Updating version to ${newVersion}...`);
     
     const filesToUpdate = [
-        'stock-images.php',
+        'stock-images-by-indietech.php', // Correct filename
         'readme.txt'
     ];
 
@@ -105,6 +105,39 @@ function incrementVersion(type = 'patch') {
     return newVersion;
 }
 
+// Function to copy directory recursively
+function copyDirectory(src, dest) {
+    if (!fs.existsSync(dest)) {
+        fs.mkdirSync(dest, { recursive: true });
+    }
+    
+    const items = fs.readdirSync(src);
+    
+    for (const item of items) {
+        // Skip hidden files, system files, and other unwanted files
+        if (item.startsWith('.') || 
+            item === '.DS_Store' || 
+            item === 'Thumbs.db' || 
+            item === 'desktop.ini' ||
+            item === 'node_modules' ||
+            item === '.git' ||
+            item === '.gitignore' ||
+            item === 'package-lock.json' ||
+            item.endsWith('.zip')) {
+            continue;
+        }
+        
+        const srcPath = path.join(src, item);
+        const destPath = path.join(dest, item);
+        
+        if (fs.statSync(srcPath).isDirectory()) {
+            copyDirectory(srcPath, destPath);
+        } else {
+            fs.copyFileSync(srcPath, destPath);
+        }
+    }
+}
+
 // Check if version update is requested
 const args = process.argv.slice(2);
 let shouldUpdateVersion = false;
@@ -118,9 +151,12 @@ if (args.includes('--version') || args.includes('-v')) {
     }
 }
 
-console.log('�� Starting WordPress plugin packaging...');
+console.log('🚀 Starting WordPress plugin packaging...');
 
 // Update version if requested
+let finalVersion = version;
+let finalZipName = zipName;
+
 if (shouldUpdateVersion) {
     const newVersion = incrementVersion(versionType);
     console.log(`📈 Incrementing version: ${version} → ${newVersion}`);
@@ -133,13 +169,13 @@ if (shouldUpdateVersion) {
     // Update plugin files
     updateAllVersions(newVersion);
     
-    // Update the version variable for this script
-    const updatedVersion = newVersion;
-    const updatedZipName = `${pluginName}-v${updatedVersion}.zip`;
+    // Update the version variables for this script
+    finalVersion = newVersion;
+    finalZipName = `${pluginName}-v${newVersion}.zip`;
     
-    console.log(`🔄 Using updated version: ${updatedVersion}`);
+    console.log(`🔄 Using updated version: ${finalVersion}`);
 } else {
-    console.log(`📋 Using current version: ${version}`);
+    console.log(`📋 Using current version: ${finalVersion}`);
 }
 
 // Create output directory
@@ -151,10 +187,13 @@ if (!fs.existsSync(outputDir)) {
 // Copy files to dist directory
 console.log('📁 Copying plugin files...');
 
-// Copy main plugin file
-if (fs.existsSync('stock-images.php')) {
-    fs.copyFileSync('stock-images.php', path.join(outputDir, 'stock-images.php'));
-    console.log('✅ Copied stock-images.php');
+// Copy main plugin file (correct filename)
+if (fs.existsSync('stock-images-by-indietech.php')) {
+    fs.copyFileSync('stock-images-by-indietech.php', path.join(outputDir, 'stock-images-by-indietech.php'));
+    console.log('✅ Copied stock-images-by-indietech.php');
+} else {
+    console.error('❌ Main plugin file stock-images-by-indietech.php not found!');
+    process.exit(1);
 }
 
 // Copy readme.txt
@@ -163,98 +202,40 @@ if (fs.existsSync('readme.txt')) {
     console.log('✅ Copied readme.txt');
 }
 
-// Copy assets directory
+// Copy index.php (security file)
+if (fs.existsSync('index.php')) {
+    fs.copyFileSync('index.php', path.join(outputDir, 'index.php'));
+    console.log('✅ Copied index.php');
+}
+
+// Copy assets directory completely
 if (fs.existsSync('assets')) {
-    if (!fs.existsSync(path.join(outputDir, 'assets'))) {
-        fs.mkdirSync(path.join(outputDir, 'assets'), { recursive: true });
-    }
-    
-    // Copy CSS and JS files
-    if (fs.existsSync('assets/css')) {
-        if (!fs.existsSync(path.join(outputDir, 'assets/css'))) {
-            fs.mkdirSync(path.join(outputDir, 'assets/css'), { recursive: true });
-        }
-        const cssFiles = fs.readdirSync('assets/css');
-        cssFiles.forEach(file => {
-            if (file.endsWith('.css')) {
-                fs.copyFileSync(
-                    path.join('assets/css', file),
-                    path.join(outputDir, 'assets/css', file)
-                );
-                console.log(`✅ Copied assets/css/${file}`);
-            }
-        });
-    }
-    
-    if (fs.existsSync('assets/js')) {
-        if (!fs.existsSync(path.join(outputDir, 'assets/js'))) {
-            fs.mkdirSync(path.join(outputDir, 'assets/js'), { recursive: true });
-        }
-        const jsFiles = fs.readdirSync('assets/js');
-        jsFiles.forEach(file => {
-            if (file.endsWith('.js')) {
-                fs.copyFileSync(
-                    path.join('assets/js', file),
-                    path.join(outputDir, 'assets/js', file)
-                );
-                console.log(`✅ Copied assets/js/${file}`);
-            }
-        });
-    }
+    copyDirectory('assets', path.join(outputDir, 'assets'));
+    console.log('✅ Copied assets directory');
 }
 
-// Copy templates directory
+// Copy templates directory completely
 if (fs.existsSync('templates')) {
-    if (!fs.existsSync(path.join(outputDir, 'templates'))) {
-        fs.mkdirSync(path.join(outputDir, 'templates'), { recursive: true });
-    }
-    
-    const templateFiles = fs.readdirSync('templates');
-    templateFiles.forEach(file => {
-        if (file.endsWith('.php')) {
-            fs.copyFileSync(
-                path.join('templates', file),
-                path.join(outputDir, 'templates', file)
-            );
-            console.log(`✅ Copied templates/${file}`);
-        }
-    });
+    copyDirectory('templates', path.join(outputDir, 'templates'));
+    console.log('✅ Copied templates directory');
 }
 
-// Copy languages directory
+// Copy languages directory completely
 if (fs.existsSync('languages')) {
-    if (!fs.existsSync(path.join(outputDir, 'languages'))) {
-        fs.mkdirSync(path.join(outputDir, 'languages'), { recursive: true });
-    }
-    
-    const langFiles = fs.readdirSync('languages');
-    langFiles.forEach(file => {
-        if (file.endsWith('.pot') || file.endsWith('.po') || file.endsWith('.mo')) {
-            fs.copyFileSync(
-                path.join('languages', file),
-                path.join(outputDir, 'languages', file)
-            );
-            console.log(`✅ Copied languages/${file}`);
-        }
-    });
+    copyDirectory('languages', path.join(outputDir, 'languages'));
+    console.log('✅ Copied languages directory');
 }
 
-// Copy screenshots directory (for WordPress.org)
+// Copy screenshots directory completely
 if (fs.existsSync('screenshots')) {
-    if (!fs.existsSync(path.join(outputDir, 'screenshots'))) {
-        fs.mkdirSync(path.join(outputDir, 'screenshots'), { recursive: true });
-    }
-    
-    const screenshotFiles = fs.readdirSync('screenshots');
-    screenshotFiles.forEach(file => {
-        if (file.endsWith('.png') || file.endsWith('.jpg') || file.endsWith('.jpeg')) {
-            fs.copyFileSync(
-                path.join('screenshots', file),
-                path.join(outputDir, 'screenshots', file)
-            );
-            console.log(`✅ Copied screenshots/${file}`);
-        }
-    });
+    copyDirectory('screenshots', path.join(outputDir, 'screenshots'));
+    console.log('✅ Copied screenshots directory');
+}
+
+// Copy scripts directory completely
+if (fs.existsSync('scripts')) {
+    copyDirectory('scripts', path.join(outputDir, 'scripts'));
+    console.log('✅ Copied scripts directory');
 }
 
 // Create zip file
@@ -262,16 +243,17 @@ console.log('📦 Creating zip file...');
 
 try {
     // Remove existing zip if it exists
-    if (fs.existsSync(zipName)) {
-        fs.unlinkSync(zipName);
+    if (fs.existsSync(finalZipName)) {
+        fs.unlinkSync(finalZipName);
+        console.log('🗑️  Removed existing zip file');
     }
     
     // Create zip using system zip command
-    const zipCommand = `cd ${outputDir} && zip -r ../${zipName} .`;
+    const zipCommand = `cd ${outputDir} && zip -r ../${finalZipName} .`;
     execSync(zipCommand, { stdio: 'inherit' });
     
-    console.log(`✅ Successfully created: ${zipName}`);
-    console.log(`📁 Plugin ready for upload: ${path.resolve(zipName)}`);
+    console.log(`✅ Successfully created: ${finalZipName}`);
+    console.log(`📁 Plugin ready for upload: ${path.resolve(finalZipName)}`);
     
     // Clean up dist directory
     fs.rmSync(outputDir, { recursive: true, force: true });
@@ -279,14 +261,14 @@ try {
     
 } catch (error) {
     console.error('❌ Error creating zip file:', error.message);
-    console.log('�� Make sure you have zip command available on your system');
+    console.log('💡 Make sure you have zip command available on your system');
     console.log('   On macOS/Linux: zip should be pre-installed');
     console.log('   On Windows: Install 7-Zip or use WSL');
     process.exit(1);
 }
 
 console.log('\n🎉 WordPress plugin packaging complete!');
-console.log(`�� You can now upload ${zipName} to your WordPress site`);
+console.log(`📤 You can now upload ${finalZipName} to your WordPress site`);
 
 // Show usage information
 if (args.includes('--help') || args.includes('-h')) {
