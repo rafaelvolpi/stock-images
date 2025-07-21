@@ -131,7 +131,33 @@ function copyDirectory(src, dest) {
         const destPath = path.join(dest, item);
         
         if (fs.statSync(srcPath).isDirectory()) {
-            copyDirectory(srcPath, destPath);
+            // Recursively copy directory, but skip .DS_Store files at all levels
+            copyDirectoryRecursive(srcPath, destPath);
+        } else {
+            fs.copyFileSync(srcPath, destPath);
+        }
+    }
+}
+
+// Helper function to recursively copy directories while excluding .DS_Store files
+function copyDirectoryRecursive(src, dest) {
+    if (!fs.existsSync(dest)) {
+        fs.mkdirSync(dest, { recursive: true });
+    }
+    
+    const items = fs.readdirSync(src);
+    
+    for (const item of items) {
+        // Skip .DS_Store files at any level
+        if (item === '.DS_Store') {
+            continue;
+        }
+        
+        const srcPath = path.join(src, item);
+        const destPath = path.join(dest, item);
+        
+        if (fs.statSync(srcPath).isDirectory()) {
+            copyDirectoryRecursive(srcPath, destPath);
         } else {
             fs.copyFileSync(srcPath, destPath);
         }
